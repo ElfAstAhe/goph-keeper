@@ -44,6 +44,7 @@ const (
 	FlagCipherKey string = "cipher-key"
 )
 
+// Переменные среды
 const (
 	// EnvHTTPAddress - адрес и порт http listener, образец "localhost:8080" или ":8080"
 	EnvHTTPAddress string = "GOPHKEEPER_HTTP_ADDRESS"
