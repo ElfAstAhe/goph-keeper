@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
@@ -13,13 +14,16 @@ import (
 
 // App - приложение
 type App struct {
-	ctx        context.Context
-	cancel     context.CancelFunc
-	db         utils.DB
-	conf       *config.Config
-	log        logger.Logger
-	jwtHelper  *utils.JWTHelper
-	authHelper *utils.AuthHelper
+	ctx          context.Context
+	cancel       context.CancelFunc
+	db           utils.DB
+	conf         *config.Config
+	log          logger.Logger
+	cipher       utils.Cipher
+	cipherHelper *utils.CipherHelper
+	jwtHelper    *utils.JWTHelper
+	authHelper   *utils.AuthHelper
+	wg           sync.WaitGroup
 }
 
 // NewApp - конструктор структуры App
@@ -51,6 +55,7 @@ func (app *App) Init() error {
 	log := app.log.GetLogger("bootstrap init")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
 
+	app.conf = config.NewConfig()
 	log.Info("loading config")
 	if err := app.loadConfig(); err != nil {
 		return err
@@ -116,7 +121,36 @@ func (app *App) Init() error {
 //		log.Errorf("app run error [%v]", err)
 //	}
 func (app *App) Run() error {
-	// ToDo: implement
+	log := app.log.GetLogger("bootstrap run")
+
+	log.Info("start graceful shutdown")
+	app.wg.Add(1)
+	go app.gracefulShutdown()
+
+	//var eg errgroup.Group
+	//log.Info("start servers...")
+	//// http
+	//eg.Go(func() error {
+	//    if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	//        log.Errorf("Error starting http server with error [%v]", err)
+	//
+	//        return err
+	//    }
+	//
+	//    return nil
+	//})
+	//// gRPC
+	//eg.Go(func() error {
+	//    if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+	//        log.Errorf("Error starting gRPC server with error [%v]", err)
+	//
+	//        return err
+	//    }
+	//
+	//    return nil
+	//})
+	//
+	//return eg.Wait()
 
 	return nil
 }
@@ -124,6 +158,10 @@ func (app *App) Run() error {
 // Stop - метод остановки приложения
 func (app *App) Stop() {
 	app.cancel()
+}
+
+func (app *App) WaitForStop() {
+	app.wg.Wait()
 }
 
 // Close - метод освобождения ресурсов приложения

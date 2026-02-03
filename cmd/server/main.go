@@ -23,7 +23,7 @@ func main() {
 	// app initialization
 	log.Info("app init")
 	if err := app.Init(); err != nil {
-		log.Errorf("app initialization failed [%v]", err)
+		log.Errorf("app init failed [%v]", err)
 		defer app.Close()
 
 		panic(errs.NewAppCommonError("app initialization failed", err))
@@ -36,7 +36,7 @@ func main() {
 		log.Errorf("app run error [%v]", err)
 	}
 
-	//app.WG.Wait()
+	app.WaitForStop()
 
 	// app close
 	log.Info("app close")

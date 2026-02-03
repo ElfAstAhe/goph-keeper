@@ -51,11 +51,11 @@ func (db *PostgresDB) Close() error {
 
 // db.DB =========================
 
-func (db *PostgresDB) Kind() utils.DatabaseKind {
+func (db *PostgresDB) GetDBKind() utils.DatabaseKind {
 	return db.kind
 }
 
-func (db *PostgresDB) Dsn() string {
+func (db *PostgresDB) GetDsn() string {
 	return db.dsn
 }
 

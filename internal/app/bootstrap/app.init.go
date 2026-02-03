@@ -1,25 +1,61 @@
 package bootstrap
 
+import (
+	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
+	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
+	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
+)
+
 func (app *App) loadConfig() error {
-	// ToDo: implement
+	log := app.log.GetLogger("bootstrap load config")
+	if err := app.conf.Load(); err != nil {
+		return errs.NewAppCommonError("load config error", err)
+	}
+
+	log.Infof("config FINAL: [%+v]", app.conf)
+
+	if err := app.conf.Validate(); err != nil {
+		return errs.NewAppConfigError("validate config error", err)
+	}
 
 	return nil
 }
 
 func (app *App) initLogger() error {
-	// ToDo: implement
+	appLogger, err := logger.NewZapLogger("INFO", "")
+	if err != nil {
+		return errs.NewAppCommonError("init logger error", err)
+	}
+
+	app.log = appLogger
 
 	return nil
 }
 
 func (app *App) initHelpers() error {
-	// ToDo: implement
+	var err error
+	// cipher
+	app.cipher, err = utils.NewAesGcmCipher([]byte(app.conf.CipherKey))
+	if err != nil {
+		return errs.NewAppCommonError("init helpers cipher error", err)
+	}
+	// cipher helper
+	app.cipherHelper = utils.NewCipherHelper(app.cipher)
+	// jwt helper
+	app.jwtHelper = utils.NewDefaultJWTHelper(app.conf.JWTConfig.SecretKey)
+	// auth helper
+	app.authHelper = utils.NewDefaultAuthHelperEx(app.jwtHelper)
 
 	return nil
 }
 
 func (app *App) initDatabase() error {
-	// ToDo: implement
+	var err error
+	app.db, err = db.NewPostgresDB(app.conf.DatabaseConfig)
+	if err != nil {
+		return errs.NewAppCommonError("init database error", err)
+	}
 
 	return nil
 }
