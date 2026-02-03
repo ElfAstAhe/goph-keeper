@@ -1,9 +1,12 @@
 package utils
 
-import "strings"
+import (
+	"encoding/base64"
+	"strings"
+)
 
 const (
-	CipherPrefix string = "cipher:"
+	CipherPrefix string = "cipher::"
 )
 
 type Cipher interface {
@@ -23,38 +26,46 @@ func NewCipherHelper(cipher Cipher) *CipherHelper {
 	}
 }
 
-func (ch *CipherHelper) EncryptString(s string) (string, error) {
+func (ch *CipherHelper) EncryptString(s string) string {
 	if s == "" {
-		return s, nil
+		return s
 	}
 
-	return ch.cipher.EncryptString(s)
-}
-
-func (ch *CipherHelper) MustEncryptString(s string) string {
-	res, err := ch.EncryptString(s)
+	// шифруем
+	res, err := ch.cipher.Encrypt([]byte(s))
 	if err != nil {
-		panic(err)
+		return s
 	}
 
-	return CipherPrefix + res
+	// результат в base64 + prefix
+	return CipherPrefix + base64.StdEncoding.EncodeToString(res)
 }
 
-func (ch *CipherHelper) DecryptString(s string) (string, error) {
+func (ch *CipherHelper) DecryptString(s string) string {
 	if s == "" || !ch.isEncrypted(s) {
-		return s, nil
+		return s
 	}
 
-	return ch.cipher.DecryptString(s)
-}
+	// убираем префикс и проверяем есть хоть что-нибудь
+	encrypted := strings.TrimPrefix(CipherPrefix, s)
+	if encrypted == "" {
+		return s
+	}
 
-func (ch *CipherHelper) MustDecryptString(s string) string {
-	res, err := ch.DecryptString(s)
+	// из base64 в набор байт
+	bytes, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
-		panic(err)
+		return s
 	}
 
-	return res
+	// расшифровываем
+	res, err := ch.cipher.Decrypt(bytes)
+	if err != nil {
+		return s
+	}
+
+	// возвращаем результат
+	return string(res)
 }
 
 func (ch *CipherHelper) isEncrypted(s string) bool {
