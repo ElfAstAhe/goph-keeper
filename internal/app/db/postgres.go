@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -15,20 +16,20 @@ type PostgresDB struct {
 }
 
 // NewPostgresDB - конструктор соединения с БД postgres
-func NewPostgresDB(dsn string) (*PostgresDB, error) {
-	err := utils.DBValidateDSN(dsn)
+func NewPostgresDB(dbConf *config.DatabaseConfig) (*PostgresDB, error) {
+	err := utils.DBValidateDSN(dbConf.DSN)
 	if err != nil {
 		return nil, err
 	}
 
-	pg, err := sql.Open("pgx", dsn)
+	pg, err := sql.Open("pgx", dbConf.DSN)
 	if err != nil {
 		return nil, err
 	}
 
-	pg.SetMaxOpenConns(20)
-	pg.SetMaxIdleConns(5)
-	pg.SetConnMaxIdleTime(60 * time.Second)
+	pg.SetMaxOpenConns(dbConf.MaxOpenConnections)
+	pg.SetMaxIdleConns(dbConf.MaxIdleConnections)
+	pg.SetConnMaxIdleTime(time.Duration(dbConf.MaxIdleConnectionLifetime) * time.Second)
 
 	err = pg.Ping()
 	if err != nil {
@@ -38,7 +39,7 @@ func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	return &PostgresDB{
 		db:   pg,
 		kind: KindPostgres,
-		dsn:  dsn,
+		dsn:  dbConf.DSN,
 	}, nil
 }
 
