@@ -9,15 +9,16 @@ import (
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 
+// AesGcmCipher -AES/GCM cipher util
 type AesGcmCipher struct {
-	key   []byte
 	block cipher.Block
 	gcm   cipher.AEAD
 }
 
+// NewAesGcmCipher - aes/gcm util constructor
 func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
 	instance := new(AesGcmCipher)
-	block, err := aes.NewCipher(instance.key)
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error create cipher", err)
 	}
@@ -32,6 +33,7 @@ func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
 	return instance, nil
 }
 
+// MustNewAesGcmCipher - aes/gcm util constructor, returns instance, but generate panic on error
 func MustNewAesGcmCipher(key []byte) *AesGcmCipher {
 	instance, err := NewAesGcmCipher(key)
 	if err != nil {
