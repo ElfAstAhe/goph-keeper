@@ -4,17 +4,23 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgresDB struct {
 	db   *sql.DB
-	kind Kind
+	kind utils.DatabaseKind
 	dsn  string
 }
 
 // NewPostgresDB - конструктор соединения с БД postgres
 func NewPostgresDB(dsn string) (*PostgresDB, error) {
+	err := utils.DBValidateDSN(dsn)
+	if err != nil {
+		return nil, err
+	}
+
 	pg, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
@@ -44,7 +50,7 @@ func (db *PostgresDB) Close() error {
 
 // db.DB =========================
 
-func (db *PostgresDB) Kind() Kind {
+func (db *PostgresDB) Kind() utils.DatabaseKind {
 	return db.kind
 }
 

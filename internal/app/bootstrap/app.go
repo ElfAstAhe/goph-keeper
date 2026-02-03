@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
-	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
@@ -16,7 +15,7 @@ import (
 type App struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
-	db         db.DB
+	db         utils.DB
 	conf       *config.Config
 	log        logger.Logger
 	jwtHelper  *utils.JWTHelper
@@ -143,7 +142,7 @@ func (app *App) Close() error {
 	//}
 
 	log.Info("close db connection")
-	if err := db.CloseDB(app.db); err != nil {
+	if err := utils.DBClose(app.db); err != nil {
 		return err
 	}
 
