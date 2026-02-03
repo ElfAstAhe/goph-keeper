@@ -10,32 +10,44 @@ import (
 )
 
 type AesGcmCipher struct {
-	key []byte
+	key   []byte
+	block cipher.Block
+	gcm   cipher.AEAD
 }
 
-func NewAesGcmCipher(key []byte) *AesGcmCipher {
-	return &AesGcmCipher{
-		key: key,
-	}
-}
-
-func (a *AesGcmCipher) Encrypt(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(a.key)
+func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
+	instance := new(AesGcmCipher)
+	block, err := aes.NewCipher(instance.key)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error create cipher", err)
 	}
-
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error create gcm", err)
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+	instance.block = block
+	instance.gcm = gcm
+
+	return instance, nil
+}
+
+func MustNewAesGcmCipher(key []byte) *AesGcmCipher {
+	instance, err := NewAesGcmCipher(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return instance
+}
+
+func (a *AesGcmCipher) Encrypt(data []byte) ([]byte, error) {
+	nonce := make([]byte, a.gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, errs.NewUtlCipherError("error fill nonce", err)
 	}
 
-	return gcm.Seal(nonce, nonce, data, nil), nil
+	return a.gcm.Seal(nonce, nonce, data, nil), nil
 }
 
 func (a *AesGcmCipher) EncryptString(s string) (string, error) {
@@ -45,23 +57,13 @@ func (a *AesGcmCipher) EncryptString(s string) (string, error) {
 }
 
 func (a *AesGcmCipher) Decrypt(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(a.key)
-	if err != nil {
-		return nil, errs.NewUtlCipherError("error create cipher", err)
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, errs.NewUtlCipherError("error create gcm", err)
-	}
-
-	nonceSize := gcm.NonceSize()
+	nonceSize := a.gcm.NonceSize()
 	if len(data) < nonceSize {
 		return nil, errs.NewUtlCipherError("error data validation", errs.NewAppInvalidArgumentError("data", data))
 	}
 
 	nonce, data := data[:nonceSize], data[nonceSize:]
-	plain, err := gcm.Open(nil, nonce, data, nil)
+	plain, err := a.gcm.Open(nil, nonce, data, nil)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error decrypt data", err)
 	}
