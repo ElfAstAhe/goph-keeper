@@ -9,15 +9,18 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
 // App - приложение
 type App struct {
-	ctx    context.Context
-	Cancel context.CancelFunc
-	db     db.DB
-	conf   *config.Config
-	log    logger.Logger
+	ctx        context.Context
+	cancel     context.CancelFunc
+	db         db.DB
+	conf       *config.Config
+	log        logger.Logger
+	jwtHelper  *utils.JWTHelper
+	authHelper *utils.AuthHelper
 }
 
 // NewApp - конструктор структуры App
@@ -30,7 +33,7 @@ func NewApp() *App {
 
 	return &App{
 		ctx:    ctx,
-		Cancel: cancel,
+		cancel: cancel,
 		log:    logger.NewStartupZapLogger(),
 	}
 }
@@ -40,12 +43,64 @@ func NewApp() *App {
 // app initialization
 //
 //	if err := app.Init(); err != nil {
-//		logger.Errorf("app initialization failed [%v]", err)
+//		log.Errorf("app initialization failed [%v]", err)
+//		defer app.Close()
 //
-//		os.Exit(1)
+//		panic(errs.NewAppCommonError("app initialization failed", err))
 //	}
 func (app *App) Init() error {
-	// ToDo: implement
+	log := app.log.GetLogger("bootstrap init")
+	//    defer _utl.CloseOnly(logger.(io.Closer))
+
+	log.Info("loading config")
+	if err := app.loadConfig(); err != nil {
+		return err
+	}
+
+	log.Info("init logger")
+	if err := app.initLogger(); err != nil {
+		return err
+	}
+
+	log.Info("init database")
+	if err := app.initDatabase(); err != nil {
+		return err
+	}
+
+	log.Info("migrate database")
+	if err := app.migrateDatabase(); err != nil {
+		return err
+	}
+
+	//log.Info("load im mem data")
+	//if err := app.loadInMemData(); err != nil {
+	//    return err
+	//}
+
+	log.Info("init dependencies")
+	if err := app.initDependencies(); err != nil {
+		return err
+	}
+
+	log.Info("init startup services")
+	if err := app.initStartupServices(); err != nil {
+		return err
+	}
+
+	log.Info("init http router")
+	if err := app.initHTTPRouter(); err != nil {
+		return err
+	}
+
+	log.Info("init http server")
+	if err := app.initHTTPServer(); err != nil {
+		return err
+	}
+
+	log.Info("init gRPC server")
+	if err := app.initGRPCServer(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -53,7 +108,8 @@ func (app *App) Init() error {
 // Run - метод запуска приложения
 //
 //	if err := app.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-//	    logger.Errorf("app run error [%v]", err)
+//		app.Stop()
+//		log.Errorf("app run error [%v]", err)
 //	}
 func (app *App) Run() error {
 	// ToDo: implement
@@ -61,12 +117,17 @@ func (app *App) Run() error {
 	return nil
 }
 
+// Stop - метод остановки приложения
+func (app *App) Stop() {
+	app.cancel()
+}
+
 // Close - метод освобождения ресурсов приложения
 //
 //	if err := app.Close(); err != nil {
-//		logger.Errorf("app close error [%v]", err)
+//		log.Errorf("app close error [%v]", err)
 //
-//		os.Exit(1)
+//		panic(errs.NewAppCommonError("app close failed", err))
 //	}
 func (app *App) Close() error {
 	log := app.log.GetLogger("bootstrap close")
@@ -100,7 +161,7 @@ func (app *App) gracefulShutdown() {
 	select {
 	case <-sig:
 		{
-			app.Cancel()
+			app.cancel()
 			break
 		}
 	case <-app.ctx.Done():

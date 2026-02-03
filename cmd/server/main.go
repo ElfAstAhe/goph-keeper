@@ -8,46 +8,45 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/bootstrap"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
+	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 
 func main() {
-	printOrNA("Build version: %s\n", config.Version)
-	printOrNA("Build date: %s\n", config.BuildTime)
-	printOrNA("Project stage: %s\n", config.Stage)
+	fmt.Println(config.BuildVersionInfo())
 
 	// app instance
 	app := bootstrap.NewApp()
-	//	defer app.Close()
-	logger := app.GetLogger().GetLogger("main")
-	//	defer _utl.CloseOnly(logger.(io.Closer))
+
+	// log
+	log := app.GetLogger().GetLogger("main")
 
 	// app initialization
-	logger.Info("app init")
+	log.Info("app init")
 	if err := app.Init(); err != nil {
-		logger.Errorf("app initialization failed [%v]", err)
+		log.Errorf("app initialization failed [%v]", err)
 		defer app.Close()
 
-		panic(errors.New("app initialization failed"))
+		panic(errs.NewAppCommonError("app initialization failed", err))
 	}
 
 	// app run
-	logger.Info("app run")
+	log.Info("app run")
 	if err := app.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		app.Cancel()
-		logger.Errorf("app run error [%v]", err)
+		app.Stop()
+		log.Errorf("app run error [%v]", err)
 	}
 
 	//app.WG.Wait()
 
 	// app close
-	logger.Info("app close")
+	log.Info("app close")
 	if err := app.Close(); err != nil {
-		logger.Errorf("app close error [%v]", err)
+		log.Errorf("app close error [%v]", err)
 
-		panic(errors.New("app close failed"))
+		panic(errs.NewAppCommonError("app close failed", err))
 	}
 
-	logger.Info("app shutdown")
+	log.Info("app shutdown")
 }
 
 func printOrNA(template, val string) {

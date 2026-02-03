@@ -5,7 +5,26 @@ import (
 	"strings"
 )
 
-const undef string = "undefined"
+// Флаги приложения
+const (
+	// FlagHTTPAddress - адрес и порт http listener, образец "localhost:8080" или ":8080"
+	FlagHTTPAddress string = "a"
+	// FlagHTTPSPrivateKeyPath - путь к файлу приватного ключа https
+	FlagHTTPSPrivateKeyPath string = "https-private-key-path"
+	// FlagHTTPSCertificatePath - путь к файлу сертификата https
+	// FlagGRPCAddress - адрес и порт gRPC listener, образец "localhost:50051" или ":50051"
+	FlagHTTPSCertificatePath string = "https-certificate-path"
+	// FlagDatabaseDSN - строка соединения с БД
+	FlagDatabaseDSN string = "d"
+	// FlagJWTSecretKey - серкетный ключ шифрования JWT
+	FlagJWTSecretKey string = "jwt-secret-key"
+	// FlagCipherKey - ключ шифрования
+	FlagCipherKey string = "cipher-key"
+)
+
+const (
+	undef string = "undefined"
+)
 
 // информация о версии приложения
 var (
