@@ -62,6 +62,11 @@ func (app *App) Init() error {
 		return err
 	}
 
+	log.Info("init helpers")
+	if err := app.initHelpers(); err != nil {
+		return err
+	}
+
 	log.Info("init database")
 	if err := app.initDatabase(); err != nil {
 		return err

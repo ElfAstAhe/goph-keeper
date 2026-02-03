@@ -14,10 +14,14 @@ const (
 	// FlagHTTPSCertificatePath - путь к файлу сертификата https
 	// FlagGRPCAddress - адрес и порт gRPC listener, образец "localhost:50051" или ":50051"
 	FlagHTTPSCertificatePath string = "https-certificate-path"
+	// FlagDatabaseKind - тип БД, предусматриваем sqlite, postgres
+	FlagDatabaseKind string = "database-kind"
 	// FlagDatabaseDSN - строка соединения с БД
-	FlagDatabaseDSN string = "d"
+	FlagDatabaseDSN string = "database-dsn"
 	// FlagJWTSecretKey - серкетный ключ шифрования JWT
 	FlagJWTSecretKey string = "jwt-secret-key"
+	// FlagJWTExpirationDurationSeconds - интервал протухания jwt в секундах
+	FlagJWTExpirationDurationSeconds string = "jwt-expiration-seconds"
 	// FlagCipherKey - ключ шифрования
 	FlagCipherKey string = "cipher-key"
 )

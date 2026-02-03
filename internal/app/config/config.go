@@ -2,6 +2,10 @@ package config
 
 import "time"
 
+const (
+	DefaultJWTExpirationDuration time.Duration = 2 * time.Hour
+)
+
 // Config - конфигурация приложения
 type Config struct {
 	HTTPAddress           string `json:"http_address"`
