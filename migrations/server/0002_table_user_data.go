@@ -16,7 +16,7 @@ create table if not exists user_data (
     name varchar(100) not null,
     kind varchar(50) not null,
     text_data text null,
-    binary_data text null,
+    binary_data bytea null,
     created_at timestamptz null default now(),
     modified_at timestamptz null default now(),
     deleted bool not null default false,

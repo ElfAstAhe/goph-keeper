@@ -39,32 +39,30 @@ type UserData struct {
 	Key        *UserDataKey
 	TextData   string
 	BinaryData []byte
-	CreatedAt  *time.Time
-	UpdatedAt  *time.Time
+	CreatedAt  time.Time
+	ModifiedAt time.Time
 	Deleted    bool
 }
 
 func NewUserData(id string, name string, dataKind string, textData string, binaryData []byte, deleted bool) *UserData {
-	currentTime := time.Now()
 	return &UserData{
 		ID:         id,
 		Key:        NewUserDataKey(name, dataKind),
 		TextData:   textData,
 		BinaryData: binaryData,
-		CreatedAt:  &currentTime,
-		UpdatedAt:  &currentTime,
+		CreatedAt:  time.Now(),
+		ModifiedAt: time.Now(),
 		Deleted:    deleted,
 	}
 }
 
-func NewEmptyOwnedUserData(userID string) *UserData {
-	return &UserData{
-		Key: NewUserDataKey("", ""),
-	}
-}
-
 func NewEmptyUserData() *UserData {
-	return NewEmptyOwnedUserData("")
+	return &UserData{
+		Key:        NewEmptyUserDataKey(),
+		BinaryData: make([]byte, 0),
+		CreatedAt:  time.Now(),
+		ModifiedAt: time.Now(),
+	}
 }
 
 func (ud *UserData) TableName() string {
@@ -108,11 +106,17 @@ func (ud *UserData) BeforeCreate() error {
 	}
 
 	ud.ID = newID.String()
+	if ud.CreatedAt.IsZero() {
+		ud.CreatedAt = time.Now()
+	}
+	ud.ModifiedAt = time.Now()
 
 	return nil
 }
 
 func (ud *UserData) BeforeChange() error {
+	ud.ModifiedAt = time.Now()
+
 	return nil
 }
 
