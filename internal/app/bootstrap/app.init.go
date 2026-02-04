@@ -35,8 +35,16 @@ func (app *App) initLogger() error {
 
 func (app *App) initHelpers() error {
 	var err error
+	var cipherKey []byte = make([]byte, 0, 32)
+	// key cipher
+	app.keyCipher = utils.NewSHA256Cipher()
+	// prepare correct cipher key
+	cipherKey, err = app.keyCipher.Encrypt([]byte(app.conf.CipherKey))
+	if err != nil {
+		return errs.NewAppCommonError("init helpers build correct cipher key error", err)
+	}
 	// cipher
-	app.cipher, err = utils.NewAesGcmCipher([]byte(app.conf.CipherKey))
+	app.cipher, err = utils.NewAesGcmCipher(cipherKey)
 	if err != nil {
 		return errs.NewAppCommonError("init helpers cipher error", err)
 	}

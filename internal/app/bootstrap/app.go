@@ -19,6 +19,7 @@ type App struct {
 	db           utils.DB
 	conf         *config.Config
 	log          logger.Logger
+	keyCipher    utils.Cipher
 	cipher       utils.Cipher
 	cipherHelper *utils.CipherHelper
 	jwtHelper    *utils.JWTHelper
@@ -194,7 +195,7 @@ func (app *App) Close() error {
 
 // gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
 func (app *App) gracefulShutdown() {
-	//defer app.WG.Done()
+	defer app.wg.Done()
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals

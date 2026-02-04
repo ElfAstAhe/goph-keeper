@@ -17,10 +17,10 @@ type PostgresDB struct {
 
 // NewPostgresDB - конструктор соединения с БД postgres
 func NewPostgresDB(dbConf *config.DatabaseConfig) (*PostgresDB, error) {
-	err := utils.DBValidateDSN(dbConf.DSN)
-	if err != nil {
-		return nil, err
-	}
+	//err := utils.DBValidateDSN(dbConf.DSN)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	pg, err := sql.Open("pgx", dbConf.DSN)
 	if err != nil {

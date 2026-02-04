@@ -123,13 +123,13 @@ func init() {
 	if AppName == "" {
 		AppName = "goph-keeper"
 	}
-	if Version == "" {
-		Version = undef
-	}
-	if BuildTime == "" {
-		BuildTime = undef
-	}
-	if Stage == "" {
-		Stage = undef
-	}
+	//if Version == "" {
+	//	Version = undef
+	//}
+	//if BuildTime == "" {
+	//	BuildTime = undef
+	//}
+	//if Stage == "" {
+	//	Stage = undef
+	//}
 }
