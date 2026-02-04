@@ -24,17 +24,17 @@ func (u UserDataRepositoryPg) Get(ctx context.Context, id string) (*model.UserDa
 	panic("implement me")
 }
 
-func (u UserDataRepositoryPg) GetByKey(ctx context.Context, key *model.UserDataKey) (*model.UserData, error) {
+func (u UserDataRepositoryPg) GetByKey(ctx context.Context, userID string, key *model.UserDataKey) (*model.UserData, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u UserDataRepositoryPg) Create(ctx context.Context, user *model.UserData) (*model.UserData, error) {
+func (u UserDataRepositoryPg) Create(ctx context.Context, userID string, user *model.UserData) (*model.UserData, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u UserDataRepositoryPg) Change(ctx context.Context, user *model.UserData) (*model.UserData, error) {
+func (u UserDataRepositoryPg) Change(ctx context.Context, userID string, user *model.UserData) (*model.UserData, error) {
 	//TODO implement me
 	panic("implement me")
 }

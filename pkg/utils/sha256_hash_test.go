@@ -8,7 +8,7 @@ import (
 
 func TestEncrypt_AllCases(t *testing.T) {
 	// prepare
-	inst := NewSHA256Cipher()
+	inst := NewSHA256Hash()
 	data := []byte("12345")
 	expectedDataLen := 32
 	// act

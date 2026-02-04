@@ -14,20 +14,73 @@ import (
 
 // все sql запросы в рамках репозитория
 const (
-	sqlGet      string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where deleted = false and id = $1"
-	sqlGetByKey string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where deleted = false and username = $1"
-	sqlCreate   string = "insert into users(id, username, password_hash, private_key, public_key, active, person, e_mail) values ($1, $2, $3, $4, $5, $6, $7, $8)"
-	sqlChange   string = `update users set
-                 password_hash = $2,
-                 private_key = $3,
-                 public_key = $4,
-                 active = $5,
-                 person = $6,
-                 e_mail = $7
-where id = $1`
-	sqlRemove string = `update users set
-                 deleted = true
-where id = $1`
+	sqlUserGet string = `
+select
+    id,
+    username,
+    password_hash,
+    private_key,
+    public_key,
+    active,
+    deleted,
+    person,
+    e_mail
+from
+    users
+where
+    id = $1`
+
+	sqlUserGetByKey string = `
+select
+    id,
+    username,
+    password_hash,
+    private_key,
+    public_key,
+    active,
+    deleted,
+    person,
+    e_mail
+from
+    users
+where
+    username = $1`
+
+	sqlUserCreate string = `
+insert into users(
+    id,
+    username,
+    password_hash,
+    private_key,
+    public_key,
+    active,
+    deleted,
+    person,
+    e_mail
+)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+
+	sqlUserChange string = `
+update
+    users
+set
+    password_hash = $2,
+    private_key = $3,
+    public_key = $4,
+    active = $5,
+    deleted = $6,
+    person = $7,
+    e_mail = $8
+where
+    id = $1`
+
+	sqlUserRemove string = `
+update
+    users
+set
+    deleted = true
+where
+    id = $1`
 )
 
 type UserRepositoryPg struct {
@@ -45,7 +98,7 @@ func NewUserRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper, user
 }
 
 func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, error) {
-	res, err := urp.internalGetSingle(ctx, sqlGet, id)
+	res, err := urp.internalGetSingle(ctx, sqlUserGet, id)
 	if err != nil {
 		return nil, apperrs.NewDalRepositoryError("UserRepo.Get", "get by id", err)
 	}
@@ -54,7 +107,7 @@ func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, e
 }
 
 func (urp *UserRepositoryPg) GetByKey(ctx context.Context, key *model.UserKey) (*model.User, error) {
-	res, err := urp.internalGetSingle(ctx, sqlGetByKey, key.Username)
+	res, err := urp.internalGetSingle(ctx, sqlUserGetByKey, key.Username)
 	if err != nil {
 		return nil, apperrs.NewDalRepositoryError("UserRepo.GetByKey", "get by key", err)
 	}
@@ -63,11 +116,16 @@ func (urp *UserRepositoryPg) GetByKey(ctx context.Context, key *model.UserKey) (
 }
 
 func (urp *UserRepositoryPg) afterGet(user *model.User) (*model.User, error) {
+	var err error = nil
 	// расшифровываем данные
 	user.PrivateKey = urp.dataCipherHelper.DecryptString(user.PrivateKey)
 	user.PublicKey = urp.dataCipherHelper.DecryptString(user.PublicKey)
 
-	return user, nil
+	if user.Deleted {
+		err = apperrs.NewBllModelSoftDeletedError("user")
+	}
+
+	return user, err
 }
 
 func (urp *UserRepositoryPg) internalGetSingle(ctx context.Context, sqlReq string, params ...any) (*model.User, error) {
@@ -77,7 +135,17 @@ func (urp *UserRepositoryPg) internalGetSingle(ctx context.Context, sqlReq strin
 	}
 
 	entity := model.NewEmptyUser()
-	err := row.Scan(&entity.ID, &entity.Key.Username, &entity.PasswordHash, &entity.PrivateKey, &entity.Active, &entity.Person, &entity.EMail)
+	err := row.Scan(
+		&entity.ID,
+		&entity.Key.Username,
+		&entity.PasswordHash,
+		&entity.PrivateKey,
+		&entity.PublicKey,
+		&entity.Active,
+		&entity.Deleted,
+		&entity.Person,
+		&entity.EMail,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -104,7 +172,6 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 	}
 
 	// сохраняем
-
 	// транзакция
 	tx, err := urp.db.GetDB().Begin()
 	if err != nil {
@@ -121,7 +188,7 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 	}()
 
 	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlCreate)
+	stmt, err := tx.PrepareContext(ctx, sqlUserCreate)
 	if err != nil {
 		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "create sql statement", err)
 	}
@@ -136,7 +203,17 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 }
 
 func (urp *UserRepositoryPg) createStmt(ctx context.Context, stmt *sql.Stmt, user *model.User) (*model.User, error) {
-	_, err := stmt.ExecContext(ctx, user.ID, user.Key.Username, user.PasswordHash, user.PrivateKey, user.Active, user.Person, user.EMail)
+	_, err := stmt.ExecContext(ctx,
+		user.ID,
+		user.Key.Username,
+		user.PasswordHash,
+		user.PrivateKey,
+		user.PublicKey,
+		user.Active,
+		user.Deleted,
+		user.Person,
+		user.EMail,
+	)
 
 	if err != nil {
 		return nil, err
@@ -153,9 +230,22 @@ func (urp *UserRepositoryPg) validateCreate(user *model.User) error {
 	return user.ValidateCreate()
 }
 
+func (urp *UserRepositoryPg) beforeCreate(user *model.User) error {
+	if err := user.BeforeCreate(); err != nil {
+		return err
+	}
+
+	// шифруем данные (проверка на уже зашифрованные данные внутри хелпера)
+	user.PrivateKey = urp.dataCipherHelper.EncryptString(user.PrivateKey)
+	user.PublicKey = urp.dataCipherHelper.EncryptString(user.PublicKey)
+
+	return nil
+}
+
 func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (*model.User, error) {
-	//TODO implement me
-	panic("implement me")
+	// ToDo: implement
+
+	return nil, nil
 }
 
 func (urp *UserRepositoryPg) validateChange(user *model.User) error {
@@ -164,6 +254,18 @@ func (urp *UserRepositoryPg) validateChange(user *model.User) error {
 	}
 
 	return user.ValidateChange()
+}
+
+func (urp *UserRepositoryPg) beforeChange(user *model.User) error {
+	if err := user.BeforeChange(); err != nil {
+		return err
+	}
+
+	// шифруем данные
+	user.PrivateKey = urp.dataCipherHelper.EncryptString(user.PrivateKey)
+	user.PublicKey = urp.dataCipherHelper.EncryptString(user.PublicKey)
+
+	return nil
 }
 
 func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) error {

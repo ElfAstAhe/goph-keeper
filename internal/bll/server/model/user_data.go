@@ -8,27 +8,22 @@ import (
 )
 
 type UserDataKey struct {
-	UserID   string
 	Name     string
 	DataKind string
 }
 
-func NewUserDataKey(userID, name, dataKind string) *UserDataKey {
+func NewUserDataKey(name, dataKind string) *UserDataKey {
 	return &UserDataKey{
-		UserID:   userID,
 		Name:     name,
 		DataKind: dataKind,
 	}
 }
 
 func NewEmptyUserDataKey() *UserDataKey {
-	return NewUserDataKey("", "", "")
+	return NewUserDataKey("", "")
 }
 
 func (udk *UserDataKey) Validate() error {
-	if udk.UserID == "" {
-		return apperrs.NewBllModelValidateError("UserDataKey.UserID", "must be set")
-	}
 	if udk.Name == "" {
 		return apperrs.NewBllModelValidateError("UserDataKey.Name", "must be set")
 	}
@@ -49,11 +44,11 @@ type UserData struct {
 	Deleted    bool
 }
 
-func NewUserData(id string, userID string, name string, dataKind string, textData string, binaryData []byte, deleted bool) *UserData {
+func NewUserData(id string, name string, dataKind string, textData string, binaryData []byte, deleted bool) *UserData {
 	currentTime := time.Now()
 	return &UserData{
 		ID:         id,
-		Key:        NewUserDataKey(userID, name, dataKind),
+		Key:        NewUserDataKey(name, dataKind),
 		TextData:   textData,
 		BinaryData: binaryData,
 		CreatedAt:  &currentTime,
@@ -64,7 +59,7 @@ func NewUserData(id string, userID string, name string, dataKind string, textDat
 
 func NewEmptyOwnedUserData(userID string) *UserData {
 	return &UserData{
-		Key: NewUserDataKey(userID, "", ""),
+		Key: NewUserDataKey("", ""),
 	}
 }
 

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/base64"
 	"strings"
 )
 
@@ -27,47 +26,41 @@ func NewCipherHelper(cipher Cipher) *CipherHelper {
 }
 
 func (ch *CipherHelper) EncryptString(s string) string {
-	if s == "" {
+	if s == "" || ch.IsEncrypted(s) {
 		return s
 	}
 
 	// шифруем
-	res, err := ch.cipher.Encrypt([]byte(s))
+	res, err := ch.cipher.EncryptString(s)
 	if err != nil {
 		return s
 	}
 
 	// результат в base64 + prefix
-	return CipherPrefix + base64.StdEncoding.EncodeToString(res)
+	return CipherPrefix + res
 }
 
 func (ch *CipherHelper) DecryptString(s string) string {
-	if s == "" || !ch.isEncrypted(s) {
+	if s == "" || !ch.IsEncrypted(s) {
 		return s
 	}
 
 	// убираем префикс и проверяем есть хоть что-нибудь
-	encrypted := strings.TrimPrefix(CipherPrefix, s)
+	encrypted := strings.TrimPrefix(s, CipherPrefix)
 	if encrypted == "" {
 		return s
 	}
 
-	// из base64 в набор байт
-	bytes, err := base64.StdEncoding.DecodeString(encrypted)
-	if err != nil {
-		return s
-	}
-
 	// расшифровываем
-	res, err := ch.cipher.Decrypt(bytes)
+	res, err := ch.cipher.DecryptString(encrypted)
 	if err != nil {
 		return s
 	}
 
 	// возвращаем результат
-	return string(res)
+	return res
 }
 
-func (ch *CipherHelper) isEncrypted(s string) bool {
+func (ch *CipherHelper) IsEncrypted(s string) bool {
 	return strings.HasPrefix(s, CipherPrefix)
 }

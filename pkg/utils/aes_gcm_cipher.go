@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
@@ -11,13 +12,11 @@ import (
 
 // AesGcmCipher -AES/GCM cipher util
 type AesGcmCipher struct {
-	block cipher.Block
-	gcm   cipher.AEAD
+	gcm cipher.AEAD
 }
 
 // NewAesGcmCipher - aes/gcm util constructor
 func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
-	instance := new(AesGcmCipher)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error create cipher", err)
@@ -27,10 +26,9 @@ func NewAesGcmCipher(key []byte) (*AesGcmCipher, error) {
 		return nil, errs.NewUtlCipherError("error create gcm", err)
 	}
 
-	instance.block = block
-	instance.gcm = gcm
-
-	return instance, nil
+	return &AesGcmCipher{
+		gcm: gcm,
+	}, nil
 }
 
 // MustNewAesGcmCipher - aes/gcm util constructor, returns instance, but generate panic on error
@@ -49,13 +47,14 @@ func (a *AesGcmCipher) Encrypt(data []byte) ([]byte, error) {
 		return nil, errs.NewUtlCipherError("error fill nonce", err)
 	}
 
+	// Seal(dst, nonce, plaintext, ad)
 	return a.gcm.Seal(nonce, nonce, data, nil), nil
 }
 
 func (a *AesGcmCipher) EncryptString(s string) (string, error) {
 	res, err := a.Encrypt([]byte(s))
 
-	return string(res), err
+	return hex.EncodeToString(res), err
 }
 
 func (a *AesGcmCipher) Decrypt(data []byte) ([]byte, error) {
@@ -64,8 +63,8 @@ func (a *AesGcmCipher) Decrypt(data []byte) ([]byte, error) {
 		return nil, errs.NewUtlCipherError("error data validation", errs.NewAppInvalidArgumentError("data", data))
 	}
 
-	nonce, data := data[:nonceSize], data[nonceSize:]
-	plain, err := a.gcm.Open(nil, nonce, data, nil)
+	nonce, cipherData := data[:nonceSize], data[nonceSize:]
+	plain, err := a.gcm.Open(nil, nonce, cipherData, nil)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("error decrypt data", err)
 	}
@@ -74,7 +73,11 @@ func (a *AesGcmCipher) Decrypt(data []byte) ([]byte, error) {
 }
 
 func (a *AesGcmCipher) DecryptString(s string) (string, error) {
-	res, err := a.Decrypt([]byte(s))
+	data, err := hex.DecodeString(s)
+	if err != nil {
+		return "", errs.NewUtlCipherError("error decoding hex string", err)
+	}
+	res, err := a.Decrypt(data)
 
 	return string(res), err
 }

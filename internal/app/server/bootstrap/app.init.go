@@ -37,9 +37,9 @@ func (app *App) initLogger() error {
 
 func (app *App) initHelpers() error {
 	var err error
-	var cipherKey = make([]byte, 0, 32)
+	var cipherKey []byte
 	// key cipher
-	app.keyCipher = utils.NewSHA256Cipher()
+	app.keyCipher = utils.NewSHA256Hash()
 	// prepare correct cipher key
 	cipherKey, err = app.keyCipher.Encrypt([]byte(app.conf.CipherKey))
 	if err != nil {

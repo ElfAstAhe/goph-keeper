@@ -45,20 +45,6 @@ func up0001(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func down0001(ctx context.Context, db *sql.DB) error {
-	if err := downDropIndexUsersAlive(ctx, db); err != nil {
-		return err
-	}
-	if err := downDropIndexUsersAliveKey(ctx, db); err != nil {
-		return err
-	}
-	if err := downDropTableUsers(ctx, db); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func upCreateTableUsers(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx, sqlCreateTableUsers)
 
@@ -75,6 +61,20 @@ func upCreateIndexUsersAliveKey(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx, sqlCreateIndexUsersAliveKey)
 
 	return err
+}
+
+func down0001(ctx context.Context, db *sql.DB) error {
+	if err := downDropIndexUsersAlive(ctx, db); err != nil {
+		return err
+	}
+	if err := downDropIndexUsersAliveKey(ctx, db); err != nil {
+		return err
+	}
+	if err := downDropTableUsers(ctx, db); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func downDropTableUsers(ctx context.Context, db *sql.DB) error {
