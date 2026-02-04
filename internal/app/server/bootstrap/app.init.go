@@ -5,6 +5,7 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/dal/server/repository"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
+	migrations "github.com/ElfAstAhe/goph-keeper/pkg/migrations/goose"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
@@ -70,7 +71,16 @@ func (app *App) initDatabase() error {
 }
 
 func (app *App) migrateDatabase() error {
-	// ToDo: implement
+	migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db.GetDB(), app.log)
+	if err != nil {
+		return errs.NewAppCommonError("create migrator", err)
+	}
+	if err := migrator.Initialize(); err != nil {
+		return errs.NewAppCommonError("init migrator", err)
+	}
+	if err := migrator.Up(); err != nil {
+		return errs.NewAppCommonError("migrator up", err)
+	}
 
 	return nil
 }
@@ -79,7 +89,10 @@ func (app *App) initDependencies() error {
 	var err error
 
 	// repositories
-	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper)
+	app.userDataRepo = repository.NewUserDataRepositoryPg(app.db, app.dataCipherHelper)
+	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper, app.userDataRepo)
+
+	// services
 
 	return err
 }

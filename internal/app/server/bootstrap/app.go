@@ -11,6 +11,7 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
+	_ "github.com/ElfAstAhe/goph-keeper/migrations/server"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
@@ -29,6 +30,7 @@ type App struct {
 	authHelper       *utils.AuthHelper
 	wg               sync.WaitGroup
 	userRepo         irepo.UserRepository
+	userDataRepo     irepo.UserDataRepository
 }
 
 // NewApp - конструктор структуры App
@@ -85,11 +87,6 @@ func (app *App) Init() error {
 	if err := app.migrateDatabase(); err != nil {
 		return err
 	}
-
-	//log.Info("load im mem data")
-	//if err := app.loadInMemData(); err != nil {
-	//    return err
-	//}
 
 	log.Info("init dependencies")
 	if err := app.initDependencies(); err != nil {

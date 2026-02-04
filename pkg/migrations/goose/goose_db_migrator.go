@@ -40,6 +40,15 @@ func (g *GooseDBMigrator) Up() error {
 	if err := goose.UpContext(g.ctx, g.DB, ".", goose.WithAllowMissing()); err != nil {
 		return errs.NewDBMigrationError("error migrate up", err)
 	}
+
+	return nil
+}
+
+func (g *GooseDBMigrator) Down() error {
+	if err := goose.DownContext(g.ctx, g.DB, ".", goose.WithAllowMissing()); err != nil {
+		return errs.NewDBMigrationError("error migrate down", err)
+	}
+
 	return nil
 }
 

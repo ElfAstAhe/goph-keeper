@@ -14,8 +14,8 @@ import (
 
 // все sql запросы в рамках репозитория
 const (
-	sqlGet      string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where id = $1"
-	sqlGetByKey string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where username = $1"
+	sqlGet      string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where deleted = false and id = $1"
+	sqlGetByKey string = "select id, username, password_hash, private_key, public_key, active, person, e_mail from users where deleted = false and username = $1"
 	sqlCreate   string = "insert into users(id, username, password_hash, private_key, public_key, active, person, e_mail) values ($1, $2, $3, $4, $5, $6, $7, $8)"
 	sqlChange   string = `update users set
                  password_hash = $2,
@@ -25,7 +25,9 @@ const (
                  person = $6,
                  e_mail = $7
 where id = $1`
-	sqlRemove string = "delete from users where id = $1"
+	sqlRemove string = `update users set
+                 deleted = true
+where id = $1`
 )
 
 type UserRepositoryPg struct {
@@ -45,19 +47,27 @@ func NewUserRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper, user
 func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlGet, id)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("user repo", "get by id", err)
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Get", "get by id", err)
 	}
 
-	return res, nil
+	return urp.afterGet(res)
 }
 
 func (urp *UserRepositoryPg) GetByKey(ctx context.Context, key *model.UserKey) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlGetByKey, key.Username)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("user repo", "get by key", err)
+		return nil, apperrs.NewDalRepositoryError("UserRepo.GetByKey", "get by key", err)
 	}
 
-	return res, nil
+	return urp.afterGet(res)
+}
+
+func (urp *UserRepositoryPg) afterGet(user *model.User) (*model.User, error) {
+	// расшифровываем данные
+	user.PrivateKey = urp.dataCipherHelper.DecryptString(user.PrivateKey)
+	user.PublicKey = urp.dataCipherHelper.DecryptString(user.PublicKey)
+
+	return user, nil
 }
 
 func (urp *UserRepositoryPg) internalGetSingle(ctx context.Context, sqlReq string, params ...any) (*model.User, error) {
@@ -83,14 +93,77 @@ func (urp *UserRepositoryPg) internalGetMulti(ctx context.Context, sql string, p
 	return nil, errs.NewAppCommonError("not implemented", nil)
 }
 
-func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (*model.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res *model.User, err error) {
+	// валидируем
+	if err = urp.validateCreate(user); err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "validate create", err)
+	}
+	// подготавливаем
+	if err := user.BeforeCreate(); err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "before create", err)
+	}
+
+	// сохраняем
+
+	// транзакция
+	tx, err := urp.db.GetDB().Begin()
+	if err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "begin transaction", err)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+
+			err = apperrs.NewDalRepositoryError("UserRepo.Create", "rollback transaction", err)
+		}
+
+		err = tx.Commit()
+	}()
+
+	// стейтмент
+	stmt, err := tx.PrepareContext(ctx, sqlCreate)
+	if err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "create sql statement", err)
+	}
+	defer stmt.Close()
+
+	res, err = urp.createStmt(ctx, stmt, user)
+	if err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "insert data", err)
+	}
+
+	return res, err
+}
+
+func (urp *UserRepositoryPg) createStmt(ctx context.Context, stmt *sql.Stmt, user *model.User) (*model.User, error) {
+	_, err := stmt.ExecContext(ctx, user.ID, user.Key.Username, user.PasswordHash, user.PrivateKey, user.Active, user.Person, user.EMail)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (urp *UserRepositoryPg) validateCreate(user *model.User) error {
+	if user == nil {
+		return apperrs.NewDalRepositoryError("user repo", "validate create user", nil)
+	}
+
+	return user.ValidateCreate()
 }
 
 func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (*model.User, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (urp *UserRepositoryPg) validateChange(user *model.User) error {
+	if user == nil {
+		return apperrs.NewDalRepositoryError("user repo", "validate change user", nil)
+	}
+
+	return user.ValidateChange()
 }
 
 func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) error {
