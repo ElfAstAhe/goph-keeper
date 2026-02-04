@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ElfAstAhe/goph-keeper/internal/app/bootstrap"
-	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
+	"github.com/ElfAstAhe/goph-keeper/internal/app/server/bootstrap"
+	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 

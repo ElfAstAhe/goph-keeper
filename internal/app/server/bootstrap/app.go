@@ -7,7 +7,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
+	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )

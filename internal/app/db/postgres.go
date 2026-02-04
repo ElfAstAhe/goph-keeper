@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ElfAstAhe/goph-keeper/internal/app/config"
+	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
