@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/model"
 	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
@@ -179,9 +180,15 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			tx.Rollback()
+			err = tx.Rollback()
 
-			err = apperrs.NewDalRepositoryError("UserRepo.Create", "rollback transaction", err)
+			recoveryErr, ok := r.(error)
+			if !ok {
+				recoveryErr = fmt.Errorf("%v", r)
+			}
+			err = apperrs.NewDalRepositoryError("UserRepo.Create", "rollback transaction", recoveryErr)
+
+			return
 		}
 
 		err = tx.Commit()

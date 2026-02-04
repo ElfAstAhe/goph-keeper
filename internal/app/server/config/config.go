@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
@@ -33,8 +34,14 @@ func (ch *HTTPConfig) Validate() error {
 		if ch.PrivateKeyPath == "" {
 			return errs.NewAppConfigItemError("https private key path empty", nil)
 		}
+		if _, err := os.Stat(ch.PrivateKeyPath); os.IsNotExist(err) {
+			return errs.NewAppConfigItemError("https private key file not found", err)
+		}
 		if ch.CertPath == "" {
 			return errs.NewAppConfigItemError("https certificate path empty", nil)
+		}
+		if _, err := os.Stat(ch.CertPath); os.IsNotExist(err) {
+			return errs.NewAppConfigItemError("https certificate file not found", err)
 		}
 	}
 
@@ -97,7 +104,7 @@ func (dc *DatabaseConfig) Validate() error {
 }
 
 type JWTConfig struct {
-	SecretKey string `env:"GOPHKEEPER_JWT_SECRET_KEY"`
+	SecretKey string `json:"-" env:"GOPHKEEPER_JWT_SECRET_KEY"`
 	Lifetime  int    `json:"lifetime" env:"GOPHKEEPER_JWT_LIFETIME"`
 }
 
@@ -130,7 +137,7 @@ type Config struct {
 	GRPCConfig     *GRPCConfig     `json:"grpc_config"`
 	DatabaseConfig *DatabaseConfig `json:"database_config"`
 	JWTConfig      *JWTConfig      `json:"jwt_config"`
-	CipherKey      string          `env:"GOPHKEEPER_CIPHER_KEY"`
+	CipherKey      string          `json:"-" env:"GOPHKEEPER_CIPHER_KEY"`
 }
 
 func NewConfig() *Config {
@@ -210,19 +217,25 @@ func (c *Config) initCli() *flag.FlagSet {
 	return cli
 }
 
-func (c *Config) loadCli() error {
+func (c *Config) loadCli() (err error) {
 	// init
 	flagSet := c.initCli()
 
 	// act
-	if err := flagSet.Parse(os.Args[1:]); err != nil {
-		return errs.NewAppConfigError("load cli flags", err)
+	if err = flagSet.Parse(os.Args[1:]); err != nil {
+		return errs.NewAppConfigError("parse cli flags", err)
 	}
-
-	// special cases
-	if c.cliFlagExists(FlagHTTPSecure, flagSet) {
-		c.HTTPConfig.UseHTTPS = true
-	}
+	defer func() {
+		if r := recover(); r != nil {
+			// Проверяем, является ли r ошибкой
+			recoveryErr, ok := r.(error)
+			if !ok {
+				// Если это строка или что-то другое, приводим к виду error вручную
+				recoveryErr = fmt.Errorf("%v", r)
+			}
+			err = errs.NewAppConfigError("parse cli flags panic", recoveryErr)
+		}
+	}()
 
 	// result
 	return nil
