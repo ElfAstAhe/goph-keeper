@@ -7,24 +7,28 @@ import (
 	"sync"
 	"syscall"
 
+	_ "expvar"
+
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
+	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
 // App - приложение
 type App struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	db           utils.DB
-	conf         *config.Config
-	log          logger.Logger
-	keyCipher    utils.Cipher
-	cipher       utils.Cipher
-	cipherHelper *utils.CipherHelper
-	jwtHelper    *utils.JWTHelper
-	authHelper   *utils.AuthHelper
-	wg           sync.WaitGroup
+	ctx              context.Context
+	cancel           context.CancelFunc
+	db               utils.DB
+	conf             *config.Config
+	log              logger.Logger
+	keyCipher        utils.Cipher
+	dataCipher       utils.Cipher
+	dataCipherHelper *utils.CipherHelper
+	jwtHelper        *utils.JWTHelper
+	authHelper       *utils.AuthHelper
+	wg               sync.WaitGroup
+	userRepo         irepo.UserRepository
 }
 
 // NewApp - конструктор структуры App

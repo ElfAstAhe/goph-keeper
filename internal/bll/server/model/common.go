@@ -14,3 +14,34 @@ const (
 	// DataKindBankCard - банковская карта
 	DataKindBankCard string = "bankcard"
 )
+
+var DataKinds = map[string]struct{}{
+	DataKindCredential: {},
+	DataKindPlainText:  {},
+	DataKindBinary:     {},
+	DataKindBankCard:   {},
+}
+
+func IsDataKind(k string) bool {
+	_, ok := DataKinds[k]
+
+	return ok
+}
+
+type Identity interface {
+	TableName() string
+
+	GetID() string
+
+	IsExists() bool
+
+	ValidateCreate() error
+	ValidateChange() error
+
+	BeforeCreate() error
+	BeforeChange() error
+}
+
+type IdentitySoftRemovable interface {
+	IsDeleted() bool
+}

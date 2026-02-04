@@ -7,6 +7,8 @@ type AuthForbiddenError struct {
 	err     error
 }
 
+var ErrAuthForbidden *AuthForbiddenError
+
 func NewAuthForbiddenError(message string, err error) *AuthForbiddenError {
 	return &AuthForbiddenError{
 		message: message,

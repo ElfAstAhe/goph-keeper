@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
+	"github.com/ElfAstAhe/goph-keeper/internal/dal/server/repository"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
@@ -35,7 +36,7 @@ func (app *App) initLogger() error {
 
 func (app *App) initHelpers() error {
 	var err error
-	var cipherKey []byte = make([]byte, 0, 32)
+	var cipherKey = make([]byte, 0, 32)
 	// key cipher
 	app.keyCipher = utils.NewSHA256Cipher()
 	// prepare correct cipher key
@@ -43,13 +44,13 @@ func (app *App) initHelpers() error {
 	if err != nil {
 		return errs.NewAppCommonError("init helpers build correct cipher key error", err)
 	}
-	// cipher
-	app.cipher, err = utils.NewAesGcmCipher(cipherKey)
+	// data cipher
+	app.dataCipher, err = utils.NewAesGcmCipher(cipherKey)
 	if err != nil {
 		return errs.NewAppCommonError("init helpers cipher error", err)
 	}
 	// cipher helper
-	app.cipherHelper = utils.NewCipherHelper(app.cipher)
+	app.dataCipherHelper = utils.NewCipherHelper(app.dataCipher)
 	// jwt helper
 	app.jwtHelper = utils.NewDefaultJWTHelper(app.conf.JWTConfig.SecretKey)
 	// auth helper
@@ -75,9 +76,12 @@ func (app *App) migrateDatabase() error {
 }
 
 func (app *App) initDependencies() error {
-	// ToDo: implement
+	var err error
 
-	return nil
+	// repositories
+	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper)
+
+	return err
 }
 
 func (app *App) initStartupServices() error {
