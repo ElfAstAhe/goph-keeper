@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
+	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	"github.com/ElfAstAhe/goph-keeper/internal/dal/server/repository"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
@@ -56,6 +57,8 @@ func (app *App) initHelpers() error {
 	app.jwtHelper = utils.NewDefaultJWTHelper(app.conf.JWTConfig.SecretKey)
 	// auth helper
 	app.authHelper = utils.NewDefaultAuthHelperEx(app.jwtHelper)
+	// keysHelper (RSA for keys pair)
+	app.keysHelper = utils.NewRSAKeysHelper(utils.RSAKey2048)
 
 	return nil
 }
@@ -93,6 +96,7 @@ func (app *App) initDependencies() error {
 	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper, app.userDataRepo)
 
 	// services
+	app.userService = service.NewUserService(app.userRepo, app.dataCipherHelper, app.keysHelper, app.log)
 
 	return err
 }

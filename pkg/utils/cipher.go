@@ -71,17 +71,17 @@ func (ch *CipherHelper) EncryptBinary(data []byte) []byte {
 		return data
 	}
 
-	prefix := []byte(CipherPrefix)
 	encrypted, err := ch.cipher.Encrypt(data)
 	if err != nil {
 		return data
 	}
 
-	res := make([]byte, len(prefix)+len(encrypted))
+	prefixLen := len(CipherPrefix)
+	res := make([]byte, prefixLen+len(encrypted))
 
 	// Копируем части
-	copy(res, prefix)
-	copy(res[len(prefix):], encrypted)
+	copy(res, CipherPrefix)
+	copy(res[prefixLen:], encrypted)
 
 	return res
 }
@@ -91,8 +91,7 @@ func (ch *CipherHelper) DecryptBinary(data []byte) []byte {
 		return data
 	}
 
-	prefix := []byte(CipherPrefix)
-	prefixLen := len(prefix)
+	prefixLen := len(CipherPrefix)
 
 	// расшифровываем
 	res, err := ch.cipher.Decrypt(data[prefixLen:])
@@ -108,8 +107,7 @@ func (ch *CipherHelper) IsStringEncrypted(s string) bool {
 }
 
 func (ch *CipherHelper) IsEncrypted(data []byte) bool {
-	prefix := []byte(CipherPrefix)
-	prefixLen := len(prefix)
+	prefixLen := len(CipherPrefix)
 
 	// Проверяем, что данных достаточно, чтобы в них физически мог быть префикс
 	if len(data) < prefixLen {
@@ -117,5 +115,5 @@ func (ch *CipherHelper) IsEncrypted(data []byte) bool {
 	}
 
 	// Сравниваем только начальную часть данных с префиксом
-	return bytes.Equal(data[:prefixLen], prefix)
+	return bytes.Equal(data[:prefixLen], CipherPrefix)
 }

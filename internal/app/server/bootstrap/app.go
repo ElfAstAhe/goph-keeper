@@ -11,6 +11,7 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
+	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	_ "github.com/ElfAstAhe/goph-keeper/migrations/server"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
@@ -26,11 +27,13 @@ type App struct {
 	keyCipher        utils.Cipher
 	dataCipher       utils.Cipher
 	dataCipherHelper *utils.CipherHelper
+	keysHelper       *utils.RSAKeysHelper
 	jwtHelper        *utils.JWTHelper
 	authHelper       *utils.AuthHelper
 	wg               sync.WaitGroup
 	userRepo         irepo.UserRepository
 	userDataRepo     irepo.UserDataRepository
+	userService      service.UserService
 }
 
 // NewApp - конструктор структуры App
