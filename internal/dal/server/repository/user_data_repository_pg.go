@@ -8,7 +8,6 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/model"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
-	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
@@ -97,6 +96,22 @@ set
 where
     deleted = false
 and user_id = $1
+`
+
+	sqlUserDataListAllByOwner string = `
+select
+    id,
+    name,
+    kind,
+    text_data,
+    binary_data,
+    created_at,
+    modified_at,
+    deleted
+from
+    user_data
+where
+    user_id = $1
 `
 )
 
@@ -400,12 +415,49 @@ func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, id string) error {
 }
 
 func (udrp *UserDataRepositoryPg) ListAllByOwner(ctx context.Context, userID string) ([]*model.UserData, error) {
-	//TODO implement me
-	panic("implement me")
+	return udrp.internalGetMulti(ctx, sqlUserDataListAllByOwner, userID)
 }
 
-func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string, params ...any) ([]model.UserData, error) {
-	return nil, errs.NewAppCommonError("not implemented", nil)
+func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string, params ...any) ([]*model.UserData, error) {
+	rows, err := udrp.db.GetDB().QueryContext(ctx, sqlReq, params...)
+	if err != nil {
+		return nil, apperrs.NewDalRepositoryError("UserDataRepo.ListAllByOwner", "query", err)
+	}
+	defer rows.Close()
+
+	res := make([]*model.UserData, 0)
+	for rows.Next() {
+		if err := ctx.Err(); err != nil {
+			return nil, apperrs.NewDalRepositoryError("UserDataRepo.ListAllByOwner", "check context", err)
+		}
+
+		entity := model.NewEmptyUserData()
+
+		err := rows.Scan(&entity.ID,
+			&entity.Key.Name,
+			&entity.Key.DataKind,
+			&entity.TextData,
+			&entity.BinaryData,
+			&entity.CreatedAt,
+			&entity.ModifiedAt,
+			&entity.Deleted,
+		)
+		if err != nil {
+			return nil, apperrs.NewDalRepositoryError("UserDataRepo.ListAllByOwner", "scan rows", err)
+		}
+
+		entity, err = udrp.afterGet(entity)
+		if err != nil {
+			return nil, apperrs.NewDalRepositoryError("UserDataRepo.ListAllByOwner", "post scan processing", err)
+		}
+
+		res = append(res, entity)
+	}
+	if rows.Err() != nil {
+		return nil, apperrs.NewDalRepositoryError("UserDataRepo.ListAllByOwner", "after scan", rows.Err())
+	}
+
+	return res, nil
 }
 
 func (udrp *UserDataRepositoryPg) RemoveAllByOwner(ctx context.Context, userID string) (err error) {
