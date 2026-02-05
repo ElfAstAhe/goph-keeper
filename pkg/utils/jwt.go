@@ -3,20 +3,18 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"reflect"
-	"strings"
 	"time"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"google.golang.org/grpc/metadata"
 )
 
 const (
-	DefaultJWTSigningMethodName  = "HS256"
-	DefaultJWTExpirationDuration = 30 * time.Minute
+	DefaultJWTSigningMethodName  string = "HS256"
+	DefaultJWTExpirationDuration        = 30 * time.Minute
+	DefaultJWTIssuer             string = "goph-keeper"
 )
 
 var (
@@ -75,44 +73,6 @@ func NewDefaultJWTHelper(secretKey string) *JWTHelper {
 	return NewJWTHelper(DefaultJWTSigningMethod, secretKey, DefaultJWTExpirationDuration, defaultTokenIDBuilder)
 }
 
-func (h *JWTHelper) ExtractTokenStringFromCookie(cookieName string, r *http.Request) (string, error) {
-	if strings.TrimSpace(cookieName) == "" {
-		return "", errs.NewUtlJWTError("empty cookie name", nil)
-	}
-	if r == nil {
-		return "", errs.NewUtlJWTError("nil HTTP Request", nil)
-	}
-
-	cookie, err := r.Cookie(cookieName)
-	if err != nil {
-		return "", errs.NewUtlJWTError(fmt.Sprintf("cookie [%s] extraction", cookieName), err)
-	}
-	if cookie == nil {
-		return "", errs.NewUtlJWTError(fmt.Sprintf("cookie not found [%s]", cookieName), err)
-	}
-	if err = cookie.Valid(); err != nil {
-		return "", errs.NewUtlJWTError(fmt.Sprintf("cookie [%s] is invalid", cookieName), err)
-	}
-
-	return cookie.Value, nil
-}
-
-func (h *JWTHelper) ExtractTokenStringFromGRPCMetadata(metadataName string, md metadata.MD) (string, error) {
-	if strings.TrimSpace(metadataName) == "" {
-		return "", errs.NewUtlJWTError("empty metadata name", nil)
-	}
-	if md == nil {
-		return "", errs.NewUtlJWTError("nil metadata", nil)
-	}
-
-	values := md.Get(metadataName)
-	if len(values) == 0 {
-		return "", nil
-	}
-
-	return values[0], nil
-}
-
 func (h *JWTHelper) ExtractClaims(token *jwt.Token) (*AppClaims, error) {
 	res, ok := token.Claims.(*AppClaims)
 	if !ok {
@@ -145,6 +105,48 @@ func (h *JWTHelper) ExtractTokenFromString(tokenString string) (*jwt.Token, erro
 	}
 
 	return token, nil
+}
+
+func (h *JWTHelper) BuildClaims(userID, username string, admin bool, roles Roles) (*AppClaims, error) {
+	if userID == "" {
+		return nil, errs.NewAppInvalidArgumentError("user ID", "user ID is empty")
+	}
+	if username == "" {
+		return nil, errs.NewAppInvalidArgumentError("user name", "user name is empty")
+	}
+
+	return NewAppClaims(userID, username, admin, h.buildTokenID, DefaultJWTIssuer, h.expirationDuration, roles...), nil
+}
+
+func (h *JWTHelper) BuildToken(userID, username string, admin bool, roles Roles) (*jwt.Token, error) {
+	claims, err := h.BuildClaims(userID, username, admin, roles)
+	if err != nil {
+		return nil, errs.NewUtlJWTError("error building claims", err)
+	}
+
+	return jwt.NewWithClaims(h.signingMethod, claims), nil
+}
+
+func (h *JWTHelper) BuildTokenStr(token *jwt.Token) (string, error) {
+	if token == nil {
+		return "", errs.NewUtlJWTError("nil token", nil)
+	}
+
+	res, err := token.SignedString([]byte(h.secretKey))
+	if err != nil {
+		return "", errs.NewUtlJWTError("error signing token", err)
+	}
+
+	return res, nil
+}
+
+func (h *JWTHelper) BuildTokenString(userID, username string, admin bool, roles Roles) (string, error) {
+	token, err := h.BuildToken(userID, username, admin, roles)
+	if err != nil {
+		return "", errs.NewUtlJWTError("error building token", err)
+	}
+
+	return h.BuildTokenStr(token)
 }
 
 func (h *JWTHelper) buildTokenID() string {

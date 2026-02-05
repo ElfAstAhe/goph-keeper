@@ -55,8 +55,12 @@ func (app *App) initHelpers() error {
 	app.dataCipherHelper = utils.NewCipherHelper(app.dataCipher)
 	// jwt helper
 	app.jwtHelper = utils.NewDefaultJWTHelper(app.conf.JWTConfig.SecretKey)
+	// jwt http helper
+	app.jwtHTTPHelper = utils.NewJWTHTTPHelper(app.jwtHelper)
+	// jwt gRPC helper
+	app.jwtGRPCHelper = utils.NewJWTGRPCHelper(app.jwtHelper)
 	// auth helper
-	app.authHelper = utils.NewDefaultAuthHelperEx(app.jwtHelper)
+	app.authHelper = utils.NewDefaultAuthHelperEx(app.jwtHelper, app.jwtHTTPHelper, app.jwtGRPCHelper)
 	// keysHelper (RSA for keys pair)
 	app.keysHelper = utils.NewRSAKeysHelper(utils.RSAKey2048)
 

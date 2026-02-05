@@ -1,22 +1,47 @@
 package err
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
+// BllCommonError - обобщённая ошибка слоя BLL, приводит к InternalServerError
 type BllCommonError struct {
-	msg string
-	err error
+	Msg  string
+	Err  error
+	File string
+	Line int
 }
 
-var ErrBllCommon *BllCommonError
-
 func NewBllCommonError(msg string, err error) *BllCommonError {
-	return &BllCommonError{msg: msg, err: err}
+	e := &BllCommonError{
+		Msg: msg,
+		Err: err,
+	}
+	// runtime.Caller(1) берет данные о том, КТО вызвал NewBllCommonError
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		e.File = file
+		e.Line = line
+	}
+
+	return e
 }
 
 func (e *BllCommonError) Error() string {
-	return fmt.Sprintf("BLL: error performing operation with message [%s] with error [%v]", e.msg, e.err.Error())
+	stack := ""
+	if e.File != "" {
+		// Формат [file.go:123] удобен для IDE (можно кликнуть в консоли)
+		stack = fmt.Sprintf("[%s:%d] ", e.File, e.Line)
+	}
+
+	if e.Err != nil {
+		return fmt.Sprintf("%sBLL: %s: %v", stack, e.Msg, e.Err)
+	}
+
+	return fmt.Sprintf("%sBLL: %s", stack, e.Msg)
 }
 
 func (e *BllCommonError) Unwrap() error {
-	return e.err
+	return e.Err
 }

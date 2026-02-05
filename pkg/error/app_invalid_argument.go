@@ -2,6 +2,7 @@ package error
 
 import "fmt"
 
+// AppInvalidArgumentError - некорректный аргумент, приводт к Bad Request
 type AppInvalidArgumentError struct {
 	Param string
 	Value any

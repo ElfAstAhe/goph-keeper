@@ -29,6 +29,8 @@ type App struct {
 	dataCipherHelper *utils.CipherHelper
 	keysHelper       *utils.RSAKeysHelper
 	jwtHelper        *utils.JWTHelper
+	jwtHTTPHelper    *utils.JWTHTTPHelper
+	jwtGRPCHelper    *utils.JWTGRPCHelper
 	authHelper       *utils.AuthHelper
 	wg               sync.WaitGroup
 	userRepo         irepo.UserRepository

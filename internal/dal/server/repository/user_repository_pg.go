@@ -101,7 +101,7 @@ func NewUserRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper, user
 func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlUserGet, id)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Get", "get by id", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Get", "get by id", err)
 	}
 
 	return urp.afterGet(res)
@@ -110,7 +110,7 @@ func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, e
 func (urp *UserRepositoryPg) GetByKey(ctx context.Context, key *model.UserKey) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlUserGetByKey, key.Username)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.GetByKey", "get by key", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.GetByKey", "get by key", err)
 	}
 
 	return urp.afterGet(res)
@@ -165,18 +165,27 @@ func (urp *UserRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string
 func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res *model.User, err error) {
 	// валидируем
 	if err = urp.validateCreate(user); err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "validate create", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "validate create", err)
 	}
+	// проверяем на дубли
+	founded, err := urp.GetByKey(ctx, user.Key)
+	if err != nil {
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "get by key", err)
+	}
+	if founded != nil {
+		return nil, apperrs.NewBllModelExistsError("UserRepo.Create", "user already exists", nil)
+	}
+
 	// подготавливаем
 	if err = urp.beforeCreate(user); err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "before create", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "before create", err)
 	}
 
 	// сохраняем
 	// транзакция
 	tx, err := urp.db.GetDB().Begin()
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "begin transaction", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "begin transaction", err)
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -190,13 +199,13 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 				recoveryErr = fmt.Errorf("%v", r)
 			}
 
-			err = apperrs.NewDalRepositoryError("UserRepo.Create", "panic recovery", recoveryErr)
+			err = apperrs.NewDalCommonError("UserRepo.Create", "panic recovery", recoveryErr)
 		} else if err != nil {
 			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
 		} else {
 			err = tx.Commit() // Фиксация
 			if err != nil {
-				err = apperrs.NewDalRepositoryError("UserRepo.Create", "commit", err)
+				err = apperrs.NewDalCommonError("UserRepo.Create", "commit", err)
 			}
 		}
 	}()
@@ -204,7 +213,7 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 	// стейтмент
 	stmt, err := tx.PrepareContext(ctx, sqlUserCreate)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "create sql statement", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "create sql statement", err)
 	}
 	defer stmt.Close()
 
@@ -220,7 +229,7 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 		user.EMail,
 	)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Create", "insert data", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "insert data", err)
 	}
 
 	return urp.afterGet(user)
@@ -238,7 +247,7 @@ func (urp *UserRepositoryPg) execStmt(ctx context.Context, stmt *sql.Stmt, param
 
 func (urp *UserRepositoryPg) validateCreate(user *model.User) error {
 	if user == nil {
-		return apperrs.NewDalRepositoryError("user repo", "nil user instance", nil)
+		return errs.NewAppInvalidArgumentError("UserRepo.validateCreate.user", "nil user")
 	}
 
 	return user.ValidateCreate()
@@ -259,18 +268,18 @@ func (urp *UserRepositoryPg) beforeCreate(user *model.User) error {
 func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res *model.User, err error) {
 	// валидируем
 	if err = urp.validateChange(user); err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Change", "validate change", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "validate change", err)
 	}
 	// подготавливаем
 	if err = urp.beforeChange(user); err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Change", "before change", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "before change", err)
 	}
 
 	// сохраняем
 	// транзакция
 	tx, err := urp.db.GetDB().Begin()
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Change", "begin transaction", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "begin transaction", err)
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -284,20 +293,20 @@ func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res 
 				recoveryErr = fmt.Errorf("%v", r)
 			}
 
-			err = apperrs.NewDalRepositoryError("UserRepo.Change", "panic recovery", recoveryErr)
+			err = apperrs.NewDalCommonError("UserRepo.Change", "panic recovery", recoveryErr)
 		} else if err != nil {
 			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
 		} else {
 			err = tx.Commit() // Фиксация
 			if err != nil {
-				err = apperrs.NewDalRepositoryError("UserRepo.Change", "commit", err)
+				err = apperrs.NewDalCommonError("UserRepo.Change", "commit", err)
 			}
 		}
 	}()
 	// стейтмент
 	stmt, err := tx.PrepareContext(ctx, sqlUserChange)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Change", "update sql statement", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "update sql statement", err)
 	}
 	defer stmt.Close()
 
@@ -312,7 +321,7 @@ func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res 
 		user.EMail,
 	)
 	if err != nil {
-		return nil, apperrs.NewDalRepositoryError("UserRepo.Change", "update data", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "update data", err)
 	}
 
 	return urp.afterGet(user)
@@ -320,7 +329,7 @@ func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res 
 
 func (urp *UserRepositoryPg) validateChange(user *model.User) error {
 	if user == nil {
-		return apperrs.NewDalRepositoryError("user repo", "validate change user", nil)
+		return apperrs.NewDalCommonError("user repo", "validate change user", nil)
 	}
 
 	return user.ValidateChange()
@@ -343,7 +352,7 @@ func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) (err error) 
 	// транзакция
 	tx, err := urp.db.GetDB().Begin()
 	if err != nil {
-		return apperrs.NewDalRepositoryError("UserRepo.Remove", "begin transaction", err)
+		return apperrs.NewDalCommonError("UserRepo.Remove", "begin transaction", err)
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -357,26 +366,26 @@ func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) (err error) 
 				recoveryErr = fmt.Errorf("%v", r)
 			}
 
-			err = apperrs.NewDalRepositoryError("UserRepo.Remove", "panic recovery", recoveryErr)
+			err = apperrs.NewDalCommonError("UserRepo.Remove", "panic recovery", recoveryErr)
 		} else if err != nil {
 			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
 		} else {
 			err = tx.Commit() // Фиксация
 			if err != nil {
-				err = apperrs.NewDalRepositoryError("UserRepo.Remove", "commit", err)
+				err = apperrs.NewDalCommonError("UserRepo.Remove", "commit", err)
 			}
 		}
 	}()
 	// стейтмент
 	stmt, err := tx.PrepareContext(ctx, sqlUserRemove)
 	if err != nil {
-		return apperrs.NewDalRepositoryError("UserRepo.Remove", "update sql statement", err)
+		return apperrs.NewDalCommonError("UserRepo.Remove", "update sql statement", err)
 	}
 	defer stmt.Close()
 
 	err = urp.execStmt(ctx, stmt, id)
 	if err != nil {
-		return apperrs.NewDalRepositoryError("UserRepo.Remove", "update data", err)
+		return apperrs.NewDalCommonError("UserRepo.Remove", "update data", err)
 	}
 
 	return nil

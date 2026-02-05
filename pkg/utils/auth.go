@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
-
 	"github.com/golang-jwt/jwt/v4"
 	"google.golang.org/grpc/metadata"
 )
@@ -81,23 +80,41 @@ type AuthHelper struct {
 	cookieName      string
 	metadataName    string
 	jwtHelper       *JWTHelper
+	jwtHTTPHelper   *JWTHTTPHelper
+	jwtGRPCHelper   *JWTGRPCHelper
 }
 
-func NewAuthHelper(contextUserInfo ContextUserInfoType, cookieName, metadataName string, jwtHelper *JWTHelper) *AuthHelper {
+func NewAuthHelper(
+	contextUserInfo ContextUserInfoType,
+	cookieName, metadataName string,
+	jwtHelper *JWTHelper,
+	jwtHTTPHelper *JWTHTTPHelper,
+	jwtGRPCHelper *JWTGRPCHelper,
+) *AuthHelper {
 	return &AuthHelper{
 		contextUserInfo: contextUserInfo,
 		cookieName:      cookieName,
 		metadataName:    metadataName,
 		jwtHelper:       jwtHelper,
+		jwtHTTPHelper:   jwtHTTPHelper,
+		jwtGRPCHelper:   jwtGRPCHelper,
 	}
 }
 
 func NewDefaultAuthHelper(secretKey string) *AuthHelper {
-	return NewDefaultAuthHelperEx(NewDefaultJWTHelper(secretKey))
+	jwtHelper := NewDefaultJWTHelper(secretKey)
+	jwtHTTPHelper := NewJWTHTTPHelper(jwtHelper)
+	jwtGRPCHelper := NewJWTGRPCHelper(jwtHelper)
+
+	return NewDefaultAuthHelperEx(jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
-func NewDefaultAuthHelperEx(jwtHelper *JWTHelper) *AuthHelper {
-	return NewAuthHelper(DefaultContextUserInfo, DefaultCookieName, DefaultMetadataName, jwtHelper)
+func NewDefaultAuthHelperEx(
+	jwtHelper *JWTHelper,
+	jwtHTTPHelper *JWTHTTPHelper,
+	jwtGRPCHelper *JWTGRPCHelper,
+) *AuthHelper {
+	return NewAuthHelper(DefaultContextUserInfo, DefaultCookieName, DefaultMetadataName, jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
 func (ah *AuthHelper) UserInfoFromToken(token *jwt.Token) (*UserInfo, error) {
@@ -111,6 +128,23 @@ func (ah *AuthHelper) UserInfoFromToken(token *jwt.Token) (*UserInfo, error) {
 	}
 
 	return NewUserInfo(claims.UserID, claims.Subject, claims.Admin, claims.Roles), nil
+}
+
+func (ah *AuthHelper) TokenFromUserInfo(userInfo *UserInfo) (*jwt.Token, error) {
+	if userInfo == nil {
+		return nil, errs.NewUtlAuthError("nil user info", nil)
+	}
+
+	return ah.jwtHelper.BuildToken(userInfo.UserID(), userInfo.User(), userInfo.IsAdmin(), userInfo.Roles())
+}
+
+func (ah *AuthHelper) TokenStringFromUserInfo(userInfo *UserInfo) (string, error) {
+	token, err := ah.TokenFromUserInfo(userInfo)
+	if err != nil {
+		return "", err
+	}
+
+	return ah.jwtHelper.BuildTokenStr(token)
 }
 
 func (ah *AuthHelper) UserInfoFromTokenString(tokenString string) (*UserInfo, error) {
@@ -139,8 +173,8 @@ func (ah *AuthHelper) HasUserInfoInContext(ctx context.Context) bool {
 	return userInfo != nil
 }
 
-func (ah *AuthHelper) UserInfoFromHTTPRequest(r *http.Request) (*UserInfo, error) {
-	tokenString, err := ah.jwtHelper.ExtractTokenStringFromCookie(ah.cookieName, r)
+func (ah *AuthHelper) UserInfoFromHTTPRequest(request *http.Request) (*UserInfo, error) {
+	tokenString, err := ah.jwtHTTPHelper.ExtractTokenStringFromRequestCookie(ah.cookieName, request)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)
 	}
@@ -154,7 +188,7 @@ func (ah *AuthHelper) UserInfoFromHTTPRequest(r *http.Request) (*UserInfo, error
 }
 
 func (ah *AuthHelper) UserInfoFromGRPCMetadata(md metadata.MD) (*UserInfo, error) {
-	tokenString, err := ah.jwtHelper.ExtractTokenStringFromGRPCMetadata(ah.metadataName, md)
+	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromMetadata(ah.metadataName, md)
 	if err != nil {
 		return nil, errs.NewUtlAuthError("extract token string", err)
 	}
@@ -168,14 +202,14 @@ func (ah *AuthHelper) UserInfoFromGRPCMetadata(md metadata.MD) (*UserInfo, error
 }
 
 func (ah *AuthHelper) UserInfoFromGRPCContext(gRPCCtx context.Context) (*UserInfo, error) {
-	md, ok := metadata.FromIncomingContext(gRPCCtx)
-	if !ok {
-		return nil, errs.NewUtlAuthError("gRPC metadata not found", nil)
+	tokenString, err := ah.jwtGRPCHelper.ExtractTokenStringFromContext(ah.metadataName, gRPCCtx)
+	if err != nil {
+		return nil, errs.NewUtlAuthError("extract token string", err)
 	}
 
-	userInfo, err := ah.UserInfoFromGRPCMetadata(md)
+	userInfo, err := ah.UserInfoFromTokenString(tokenString)
 	if err != nil {
-		return nil, errs.NewUtlAuthError("gRPC metadata", err)
+		return nil, errs.NewUtlAuthError("extract user info", err)
 	}
 
 	return userInfo, nil
