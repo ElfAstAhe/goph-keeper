@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
@@ -96,7 +97,11 @@ func (kh *RSAKeysHelper) Decrypt(data []byte, privateKey *rsa.PrivateKey) ([]byt
 }
 
 func (kh *RSAKeysHelper) DecryptString(data string, privateKey *rsa.PrivateKey) (string, error) {
-	res, err := kh.Decrypt([]byte(data), privateKey)
+	encrypted, err := hex.DecodeString(data)
+	if err != nil {
+		return "", errs.NewUtlCipherError("hex decode error", err)
+	}
+	res, err := kh.Decrypt(encrypted, privateKey)
 	if err != nil {
 		return "", errs.NewUtlCipherError("decrypt string error", err)
 	}
@@ -104,8 +109,8 @@ func (kh *RSAKeysHelper) DecryptString(data string, privateKey *rsa.PrivateKey) 
 	return string(res), nil
 }
 
-func (kh *RSAKeysHelper) Encrypt(data []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
-	res, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &privateKey.PublicKey, data, nil)
+func (kh *RSAKeysHelper) Encrypt(data []byte, publicKey *rsa.PublicKey) ([]byte, error) {
+	res, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey, data, nil)
 	if err != nil {
 		return nil, errs.NewUtlCipherError("encrypt error", err)
 	}
@@ -113,11 +118,11 @@ func (kh *RSAKeysHelper) Encrypt(data []byte, privateKey *rsa.PrivateKey) ([]byt
 	return res, nil
 }
 
-func (kh *RSAKeysHelper) EncryptString(data string, privateKey *rsa.PrivateKey) (string, error) {
-	res, err := kh.Encrypt([]byte(data), privateKey)
+func (kh *RSAKeysHelper) EncryptString(data string, publicKey *rsa.PublicKey) (string, error) {
+	res, err := kh.Encrypt([]byte(data), publicKey)
 	if err != nil {
 		return "", errs.NewUtlCipherError("encrypt string error", err)
 	}
 
-	return string(res), nil
+	return hex.EncodeToString(res), nil
 }

@@ -19,5 +19,5 @@ type UserService interface {
 	GetProfile(ctx context.Context, userID string) (*model.User, error)
 
 	// UpdatePassword — если решишь добавить логику перешифрования ключей при смене пароля
-	UpdatePassword(ctx context.Context, userID, oldPass, newPass string) error
+	UpdatePassword(ctx context.Context, userID, newPassword, oldPassword string) error
 }

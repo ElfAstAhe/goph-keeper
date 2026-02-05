@@ -96,7 +96,7 @@ func (app *App) initDependencies() error {
 	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper, app.userDataRepo)
 
 	// services
-	app.userService = service.NewUserService(app.userRepo, app.dataCipherHelper, app.keysHelper, app.log)
+	app.userService = service.NewUserService(app.userRepo, app.keysHelper, app.log)
 
 	return err
 }
