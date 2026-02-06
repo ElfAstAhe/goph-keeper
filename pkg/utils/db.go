@@ -8,12 +8,15 @@ import (
 	"github.com/xo/dburl"
 )
 
+type NotFoundInfo func(error) (string, string, error)
+
 type DatabaseKind string
 
 type DB interface {
 	GetDB() *sql.DB
 	GetDBKind() DatabaseKind
 	GetDsn() string
+	GetHelper() DBHelper
 }
 
 func DBClose(db DB) error {

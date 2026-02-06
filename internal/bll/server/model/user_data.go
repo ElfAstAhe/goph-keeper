@@ -25,10 +25,10 @@ func NewEmptyUserDataKey() *UserDataKey {
 
 func (udk *UserDataKey) Validate() error {
 	if udk.Name == "" {
-		return apperrs.NewBllModelValidateError("UserDataKey.Name", "must be set")
+		return apperrs.NewDalValidateError("UserDataKey.Name", "empty", nil)
 	}
 	if !IsDataKind(udk.DataKind) {
-		return apperrs.NewBllModelValidateError("UserDataKey.DataKind", "must be set")
+		return apperrs.NewDalValidateError("UserDataKey.DataKind", "mismatch", nil)
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (ud *UserData) IsExists() bool {
 
 func (ud *UserData) ValidateCreate() error {
 	if ud.ID != "" {
-		return apperrs.NewBllModelValidateError("UserData.ID", "must not be set")
+		return apperrs.NewDalValidateError("UserData.ID", "not empty", nil)
 	}
 	if err := ud.Key.Validate(); err != nil {
 		return err
@@ -90,7 +90,7 @@ func (ud *UserData) ValidateCreate() error {
 
 func (ud *UserData) ValidateChange() error {
 	if ud.ID == "" {
-		return apperrs.NewBllModelValidateError("UserData.ID", "must not be set")
+		return apperrs.NewDalValidateError("UserData.ID", "empty", nil)
 	}
 	if err := ud.Key.Validate(); err != nil {
 		return err
@@ -102,7 +102,7 @@ func (ud *UserData) ValidateChange() error {
 func (ud *UserData) BeforeCreate() error {
 	newID, err := uuid.NewRandom()
 	if err != nil {
-		return apperrs.NewBllModelError("user", "generate new id", err)
+		return apperrs.NewDalCommonError("UserData.BeforeCreate", "generate new id", err)
 	}
 
 	ud.ID = newID.String()

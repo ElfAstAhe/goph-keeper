@@ -19,7 +19,7 @@ func NewEmptyUserKey() *UserKey {
 
 func (uk *UserKey) Validate() error {
 	if uk.Username == "" {
-		return apperrs.NewBllModelValidateError("UserKey.Username", "User must not be empty")
+		return apperrs.NewDalValidateError("UserKey.Username", "empty", nil)
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (u *User) IsExists() bool {
 
 func (u *User) ValidateCreate() error {
 	if u.ID != "" {
-		return apperrs.NewBllModelValidateError("User.ID", "must not be set")
+		return apperrs.NewDalValidateError("User.ID", "not empty", nil)
 	}
 	if err := u.Key.Validate(); err != nil {
 		return err
@@ -93,7 +93,7 @@ func (u *User) ValidateCreate() error {
 
 func (u *User) ValidateChange() error {
 	if u.ID == "" {
-		return apperrs.NewBllModelValidateError("User.ID", "must not be set")
+		return apperrs.NewDalValidateError("User.ID", "empty", nil)
 	}
 	if err := u.Key.Validate(); err != nil {
 		return err
@@ -107,13 +107,13 @@ func (u *User) ValidateChange() error {
 
 func (u *User) validateAttrs() error {
 	if u.PasswordHash == "" {
-		return apperrs.NewBllModelValidateError("User.PasswordHash", "must not be empty")
+		return apperrs.NewDalValidateError("User.PasswordHash", "empty", nil)
 	}
 	if u.PrivateKey == "" {
-		return apperrs.NewBllModelValidateError("User.PrivateKey", "must not be empty")
+		return apperrs.NewDalValidateError("User.PrivateKey", "empty", nil)
 	}
 	if u.PublicKey == "" {
-		return apperrs.NewBllModelValidateError("User.PublicKey", "must not be empty")
+		return apperrs.NewDalValidateError("User.PublicKey", "empty", nil)
 	}
 
 	return nil
@@ -122,7 +122,7 @@ func (u *User) validateAttrs() error {
 func (u *User) BeforeCreate() error {
 	newID, err := uuid.NewRandom()
 	if err != nil {
-		return apperrs.NewBllModelError("user", "generate new id", err)
+		return apperrs.NewDalCommonError("User.BeforeCreate", "generate new id", err)
 	}
 
 	u.ID = newID.String()

@@ -22,6 +22,7 @@ type App struct {
 	ctx              context.Context
 	cancel           context.CancelFunc
 	db               utils.DB
+	dbHelper         utils.DBHelper
 	conf             *config.Config
 	log              logger.Logger
 	keyCipher        utils.Cipher

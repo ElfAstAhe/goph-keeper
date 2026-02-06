@@ -1,28 +1,24 @@
 package err
 
-import (
-	"fmt"
-)
+import "fmt"
 
-// DalNotFoundError — отсутствие сущности
-type DalNotFoundError struct {
+// DalValidateError — ошибка уникальности данные
+type DalValidateError struct {
 	Entity string // Какая сущность (например, "User" или "UserData")
 	Value  string // Какое значение вызвало конфликт (например, "login 'admin'")
 	Err    error  // Исходная ошибка из драйвера БД (опционально)
 }
 
-var ErrDalNotFound *DalNotFoundError
-
-func NewDalNotFoundError(entity, value string, err error) *DalNotFoundError {
-	return &DalNotFoundError{
+func NewDalValidateError(entity, value string, err error) *DalValidateError {
+	return &DalValidateError{
 		Entity: entity,
 		Value:  value,
 		Err:    err,
 	}
 }
 
-func (e *DalNotFoundError) Error() string {
-	msg := fmt.Sprintf("DAL: %s with value [%s] not found", e.Entity, e.Value)
+func (e *DalValidateError) Error() string {
+	msg := fmt.Sprintf("DAL: %s with value [%s] validation failed", e.Entity, e.Value)
 	if e.Err != nil {
 		return fmt.Sprintf("%s: %v", msg, e.Err)
 	}
@@ -30,6 +26,6 @@ func (e *DalNotFoundError) Error() string {
 	return msg
 }
 
-func (e *DalNotFoundError) Unwrap() error {
+func (e *DalValidateError) Unwrap() error {
 	return e.Err
 }

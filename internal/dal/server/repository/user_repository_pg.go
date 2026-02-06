@@ -101,7 +101,7 @@ func NewUserRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper, user
 func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlUserGet, id)
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Get", "get by id", err)
+		return nil, err
 	}
 
 	return urp.afterGet(res)
@@ -110,7 +110,7 @@ func (urp *UserRepositoryPg) Get(ctx context.Context, id string) (*model.User, e
 func (urp *UserRepositoryPg) GetByKey(ctx context.Context, key *model.UserKey) (*model.User, error) {
 	res, err := urp.internalGetSingle(ctx, sqlUserGetByKey, key.Username)
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.GetByKey", "get by key", err)
+		return nil, err
 	}
 
 	return urp.afterGet(res)
@@ -123,7 +123,7 @@ func (urp *UserRepositoryPg) afterGet(user *model.User) (*model.User, error) {
 	user.PublicKey = urp.dataCipherHelper.DecryptString(user.PublicKey)
 
 	if user.Deleted {
-		err = apperrs.NewBllModelSoftDeletedError("User")
+		err = apperrs.NewDalSoftDeletedError("User", fmt.Sprintf("ID: [%s], Key: [%s]", user.ID, user.Key))
 	}
 
 	return user, err
@@ -132,7 +132,7 @@ func (urp *UserRepositoryPg) afterGet(user *model.User) (*model.User, error) {
 func (urp *UserRepositoryPg) internalGetSingle(ctx context.Context, sqlReq string, params ...any) (*model.User, error) {
 	row := urp.db.GetDB().QueryRowContext(ctx, sqlReq, params...)
 	if row.Err() != nil && !errors.Is(row.Err(), sql.ErrNoRows) {
-		return nil, nil
+		return nil, apperrs.NewDalCommonError("UserRepo.internalGetSingle", "fetch row", row.Err())
 	}
 
 	entity := model.NewEmptyUser()
@@ -149,10 +149,10 @@ func (urp *UserRepositoryPg) internalGetSingle(ctx context.Context, sqlReq strin
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, apperrs.NewDalNotFoundError("UserRepo.internalGetSingle", "user not found", err)
 		}
 
-		return nil, err
+		return nil, apperrs.NewDalCommonError("UserRepo.internalGetSingle", "scan row", err)
 	}
 
 	return entity, nil
@@ -165,15 +165,7 @@ func (urp *UserRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string
 func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res *model.User, err error) {
 	// валидируем
 	if err = urp.validateCreate(user); err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "validate create", err)
-	}
-	// проверяем на дубли
-	founded, err := urp.GetByKey(ctx, user.Key)
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "get by key", err)
-	}
-	if founded != nil {
-		return nil, apperrs.NewBllModelExistsError("UserRepo.Create", "user already exists", nil)
+		return nil, apperrs.NewDalValidateError("User", "validate create", err)
 	}
 
 	// подготавливаем
@@ -181,73 +173,47 @@ func (urp *UserRepositoryPg) Create(ctx context.Context, user *model.User) (res 
 		return nil, apperrs.NewDalCommonError("UserRepo.Create", "before create", err)
 	}
 
-	// сохраняем
-	// транзакция
-	tx, err := urp.db.GetDB().Begin()
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserRepo.Create", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserRepo.Create", "commit", err)
-			}
+	// выполнение
+	err = urp.db.GetHelper().RunInTx(ctx, urp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserCreate)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserRepo.Create", "prepare stmt", err)
 		}
-	}()
+		defer stmt.Close()
 
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserCreate)
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "create sql statement", err)
-	}
-	defer stmt.Close()
+		_, err = stmt.ExecContext(ctx,
+			user.ID,
+			user.Key.Username,
+			user.PasswordHash,
+			user.PrivateKey,
+			user.PublicKey,
+			user.Active,
+			user.Deleted,
+			user.Person,
+			user.EMail,
+		)
 
-	err = urp.execStmt(ctx, stmt,
-		user.ID,
-		user.Key.Username,
-		user.PasswordHash,
-		user.PrivateKey,
-		user.PublicKey,
-		user.Active,
-		user.Deleted,
-		user.Person,
-		user.EMail,
-	)
+		if err != nil {
+			if urp.db.GetHelper().IsUniqueViolation(err) {
+				return apperrs.NewDalAlreadyExistsError("User", user.Key.Username, err)
+			}
+
+			return apperrs.NewDalCommonError("UserRepo.Create", "exec stmt", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Create", "insert data", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Create", "run in transaction", err)
 	}
 
 	return urp.afterGet(user)
 }
 
-func (urp *UserRepositoryPg) execStmt(ctx context.Context, stmt *sql.Stmt, params ...any) error {
-	_, err := stmt.ExecContext(ctx, params...)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (urp *UserRepositoryPg) validateCreate(user *model.User) error {
 	if user == nil {
-		return errs.NewAppInvalidArgumentError("UserRepo.validateCreate.user", "nil user")
+		return errs.NewAppInvalidArgumentError("user", "nil user")
 	}
 
 	return user.ValidateCreate()
@@ -268,7 +234,7 @@ func (urp *UserRepositoryPg) beforeCreate(user *model.User) error {
 func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res *model.User, err error) {
 	// валидируем
 	if err = urp.validateChange(user); err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Change", "validate change", err)
+		return nil, apperrs.NewDalValidateError("User", "validate change", err)
 	}
 	// подготавливаем
 	if err = urp.beforeChange(user); err != nil {
@@ -276,52 +242,34 @@ func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res 
 	}
 
 	// сохраняем
-	// транзакция
-	tx, err := urp.db.GetDB().Begin()
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Change", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserRepo.Change", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserRepo.Change", "commit", err)
-			}
+	err = urp.db.GetHelper().RunInTx(ctx, urp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserChange)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserRepo.Change", "prepare stmt", err)
 		}
-	}()
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserChange)
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Change", "update sql statement", err)
-	}
-	defer stmt.Close()
+		defer stmt.Close()
 
-	err = urp.execStmt(ctx, stmt,
-		user.ID,
-		user.PasswordHash,
-		user.PrivateKey,
-		user.PublicKey,
-		user.Active,
-		user.Deleted,
-		user.Person,
-		user.EMail,
-	)
+		err = urp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
+			return "User", user.GetID(), repErr
+		},
+			user.ID,
+			user.PasswordHash,
+			user.PrivateKey,
+			user.PublicKey,
+			user.Active,
+			user.Deleted,
+			user.Person,
+			user.EMail,
+		)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserRepo.Change", "exec stmt", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserRepo.Change", "update data", err)
+		return nil, apperrs.NewDalCommonError("UserRepo.Change", "run in transaction", err)
 	}
 
 	return urp.afterGet(user)
@@ -329,7 +277,7 @@ func (urp *UserRepositoryPg) Change(ctx context.Context, user *model.User) (res 
 
 func (urp *UserRepositoryPg) validateChange(user *model.User) error {
 	if user == nil {
-		return apperrs.NewDalCommonError("user repo", "validate change user", nil)
+		return errs.NewAppInvalidArgumentError("user", "nil user")
 	}
 
 	return user.ValidateChange()
@@ -349,43 +297,25 @@ func (urp *UserRepositoryPg) beforeChange(user *model.User) error {
 
 func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) (err error) {
 	// сохраняем
-	// транзакция
-	tx, err := urp.db.GetDB().Begin()
-	if err != nil {
-		return apperrs.NewDalCommonError("UserRepo.Remove", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserRepo.Remove", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserRepo.Remove", "commit", err)
-			}
+	err = urp.db.GetHelper().RunInTx(ctx, urp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserRemove)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserRepo.Remove", "prepare stmt", err)
 		}
-	}()
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserRemove)
-	if err != nil {
-		return apperrs.NewDalCommonError("UserRepo.Remove", "update sql statement", err)
-	}
-	defer stmt.Close()
+		defer stmt.Close()
 
-	err = urp.execStmt(ctx, stmt, id)
+		err = urp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
+			return "User", id, repErr
+		}, id)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserRepo.Remove", "exec stmt", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return apperrs.NewDalCommonError("UserRepo.Remove", "update data", err)
+		return apperrs.NewDalCommonError("UserRepo.Remove", "run in transaction", err)
 	}
 
 	return nil

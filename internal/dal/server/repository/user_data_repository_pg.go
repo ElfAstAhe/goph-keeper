@@ -8,6 +8,7 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/model"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
+	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
@@ -130,7 +131,7 @@ func NewUserDataRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper) 
 func (udrp *UserDataRepositoryPg) Get(ctx context.Context, id string) (*model.UserData, error) {
 	res, err := udrp.internalGetSingle(ctx, sqlUserDataGet, id)
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Get", "get by id", err)
+		return nil, err
 	}
 
 	return udrp.afterGet(res)
@@ -148,7 +149,7 @@ func (udrp *UserDataRepositoryPg) GetByKey(ctx context.Context, userID string, k
 func (udrp *UserDataRepositoryPg) internalGetSingle(ctx context.Context, sqlReq string, params ...any) (*model.UserData, error) {
 	row := udrp.db.GetDB().QueryRowContext(ctx, sqlReq, params...)
 	if row.Err() != nil && !errors.Is(row.Err(), sql.ErrNoRows) {
-		return nil, nil
+		return nil, apperrs.NewDalCommonError("UserDataRepo.internalGetSingle", "fetch row", row.Err())
 	}
 
 	entity := model.NewEmptyUserData()
@@ -164,10 +165,10 @@ func (udrp *UserDataRepositoryPg) internalGetSingle(ctx context.Context, sqlReq 
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, apperrs.NewDalNotFoundError("UserDataRepo.internalGetSingle", "user data not found", err)
 		}
 
-		return nil, err
+		return nil, apperrs.NewDalCommonError("UserDataRepo.internalGetSingle", "scan row", err)
 	}
 
 	return entity, nil
@@ -180,7 +181,7 @@ func (udrp *UserDataRepositoryPg) afterGet(res *model.UserData) (*model.UserData
 	res.BinaryData = udrp.dataCipherHelper.DecryptBinary(res.BinaryData)
 
 	if res.Deleted {
-		err = apperrs.NewBllModelSoftDeletedError("UserData")
+		err = apperrs.NewDalSoftDeletedError("UserData", fmt.Sprintf("ID: [%s], Key: [%v]", res.ID, res.Key))
 	}
 
 	return res, err
@@ -189,7 +190,7 @@ func (udrp *UserDataRepositoryPg) afterGet(res *model.UserData) (*model.UserData
 func (udrp *UserDataRepositoryPg) Create(ctx context.Context, userID string, userData *model.UserData) (res *model.UserData, err error) {
 	// валидируем
 	if err = udrp.validateCreate(userID, userData); err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Create", "validate create", err)
+		return nil, apperrs.NewDalValidateError("UserData", "validate create", err)
 	}
 	// подготавливаем
 	if err = udrp.beforeCreate(userData); err != nil {
@@ -197,75 +198,48 @@ func (udrp *UserDataRepositoryPg) Create(ctx context.Context, userID string, use
 	}
 
 	// сохраняем
-	// транзакция
-	tx, err := udrp.db.GetDB().Begin()
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Create", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserDataRepo.Create", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserDataRepo.Create", "commit", err)
-			}
+	err = udrp.db.GetHelper().RunInTx(ctx, udrp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserDataCreate)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.Create", "prepare stmt", err)
 		}
-	}()
+		defer stmt.Close()
 
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserDataCreate)
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Create", "create sql statement", err)
-	}
-	defer stmt.Close()
+		_, err = stmt.ExecContext(ctx,
+			userData.ID,
+			userID,
+			userData.Key.Name,
+			userData.Key.DataKind,
+			userData.TextData,
+			userData.BinaryData,
+			userData.CreatedAt,
+			userData.ModifiedAt,
+			userData.Deleted,
+		)
+		if err != nil {
+			if udrp.db.GetHelper().IsUniqueViolation(err) {
+				return apperrs.NewDalAlreadyExistsError("UserData", fmt.Sprintf("userID [%s], key [%v]", userID, userData.Key), err)
+			}
 
-	err = udrp.execStmt(ctx, stmt,
-		userData.ID,
-		userID,
-		userData.Key.Name,
-		userData.Key.DataKind,
-		userData.TextData,
-		userData.BinaryData,
-		userData.CreatedAt,
-		userData.ModifiedAt,
-		userData.Deleted,
-	)
+			return apperrs.NewDalCommonError("UserDataRepo.Create", "exec stmt", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Create", "insert data", err)
+		return nil, apperrs.NewDalCommonError("UserDataRepo.Create", "run in transaction", err)
 	}
 
 	return udrp.afterGet(userData)
 }
 
-func (udrp *UserDataRepositoryPg) execStmt(ctx context.Context, stmt *sql.Stmt, params ...any) error {
-	_, err := stmt.ExecContext(ctx, params...)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (udrp *UserDataRepositoryPg) validateCreate(userID string, userData *model.UserData) error {
 	if userData == nil {
-		return apperrs.NewDalCommonError("UserDataRepo.validateCreate", "nil user data instance", nil)
+		return errs.NewAppInvalidArgumentError("userData", "nil user data")
 	}
 	if userID == "" {
-		return apperrs.NewDalCommonError("UserDataRepo.validateCreate", "empty user ID", nil)
+		return errs.NewAppInvalidArgumentError("userData", "empty user id")
 	}
 
 	return userData.ValidateCreate()
@@ -286,7 +260,7 @@ func (udrp *UserDataRepositoryPg) beforeCreate(userData *model.UserData) error {
 func (udrp *UserDataRepositoryPg) Change(ctx context.Context, userID string, userData *model.UserData) (res *model.UserData, err error) {
 	// валидируем
 	if err = udrp.validateChange(userID, userData); err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Change", "validate change", err)
+		return nil, apperrs.NewDalValidateError("UserData", "validate change", err)
 	}
 	// подготавливаем
 	if err = udrp.beforeChange(userData); err != nil {
@@ -294,54 +268,35 @@ func (udrp *UserDataRepositoryPg) Change(ctx context.Context, userID string, use
 	}
 
 	// сохраняем
-	// транзакция
-	tx, err := udrp.db.GetDB().Begin()
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Change", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserDataRepo.Change", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserDataRepo.Change", "commit", err)
-			}
+	err = udrp.db.GetHelper().RunInTx(ctx, udrp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserDataChange)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.Change", "prepare stmt", err)
 		}
-	}()
+		defer stmt.Close()
 
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserDataChange)
-	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Change", "change sql statement", err)
-	}
-	defer stmt.Close()
+		err = udrp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
+			return "UserData", userData.GetID(), repErr
+		},
+			userData.ID,
+			userID,
+			userData.Key.Name,
+			userData.Key.DataKind,
+			userData.TextData,
+			userData.BinaryData,
+			userData.CreatedAt,
+			userData.ModifiedAt,
+			userData.Deleted,
+		)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.Change", "exec stmt", err)
+		}
 
-	err = udrp.execStmt(ctx, stmt,
-		userData.ID,
-		userID,
-		userData.Key.Name,
-		userData.Key.DataKind,
-		userData.TextData,
-		userData.BinaryData,
-		userData.CreatedAt,
-		userData.ModifiedAt,
-		userData.Deleted,
-	)
+		return nil
+	})
 	if err != nil {
-		return nil, apperrs.NewDalCommonError("UserDataRepo.Change", "update data", err)
+		return nil, apperrs.NewDalCommonError("UserDataRepo.Change", "run in transaction", err)
 	}
 
 	return udrp.afterGet(userData)
@@ -372,43 +327,25 @@ func (udrp *UserDataRepositoryPg) beforeChange(userData *model.UserData) error {
 
 func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, id string) error {
 	// сохраняем
-	// транзакция
-	tx, err := udrp.db.GetDB().Begin()
-	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.Remove", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
-
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserDataRepo.Remove", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserDataRepo.Remove", "commit", err)
-			}
+	err := udrp.db.GetHelper().RunInTx(ctx, udrp.db.GetDB(), func(tx *sql.Tx) error {
+		// стейтмент
+		stmt, err := tx.PrepareContext(ctx, sqlUserDataRemove)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.Remove", "remove sql statement", err)
 		}
-	}()
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserDataRemove)
-	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.Remove", "remove sql statement", err)
-	}
-	defer stmt.Close()
+		defer stmt.Close()
 
-	err = udrp.execStmt(ctx, stmt, id)
+		err = udrp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
+			return "UserData", id, repErr
+		}, id)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.Remove", "update data", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.Remove", "update data", err)
+		return apperrs.NewDalCommonError("UserDataRepo.Remove", "run transaction", err)
 	}
 
 	return nil
@@ -460,45 +397,28 @@ func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq s
 	return res, nil
 }
 
-func (udrp *UserDataRepositoryPg) RemoveAllByOwner(ctx context.Context, userID string) (err error) {
+func (udrp *UserDataRepositoryPg) RemoveAllByOwner(ctx context.Context, userID string) error {
 	// сохраняем
-	// транзакция
-	tx, err := udrp.db.GetDB().Begin()
-	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "begin transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback() // Откатываем в любом случае
+	err := udrp.db.GetHelper().RunInTx(ctx, udrp.db.GetDB(), func(tx *sql.Tx) error {
+		stmt, err := tx.PrepareContext(ctx, sqlUserDataRemoveAllByOwner)
+		if err != nil {
+			return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "remove sql statement", err)
+		}
+		defer stmt.Close()
 
-			// Превращаем панику в читаемую ошибку для логов
-			var recoveryErr error
-			if e, ok := r.(error); ok {
-				recoveryErr = e
-			} else {
-				recoveryErr = fmt.Errorf("%v", r)
-			}
-
-			err = apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "panic recovery", recoveryErr)
-		} else if err != nil {
-			_ = tx.Rollback() // Откат при ошибке бизнеса/БД
-		} else {
-			err = tx.Commit() // Фиксация
-			if err != nil {
-				err = apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "commit", err)
+		err = udrp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
+			return "UserData", userID, repErr
+		}, userID)
+		if err != nil {
+			if !errors.As(err, &apperrs.ErrDalNotFound) {
+				return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "update data", err)
 			}
 		}
-	}()
-	// стейтмент
-	stmt, err := tx.PrepareContext(ctx, sqlUserDataRemoveAllByOwner)
-	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "remove sql statement", err)
-	}
-	defer stmt.Close()
 
-	err = udrp.execStmt(ctx, stmt, userID)
+		return nil
+	})
 	if err != nil {
-		return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "update data", err)
+		return apperrs.NewDalCommonError("UserDataRepo.RemoveAllByOwner", "run transaction", err)
 	}
 
 	return nil

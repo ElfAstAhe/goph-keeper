@@ -1,6 +1,8 @@
 package err
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // DalAlreadyExistsError — ошибка уникальности данные
 type DalAlreadyExistsError struct {

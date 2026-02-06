@@ -69,7 +69,8 @@ func (app *App) initHelpers() error {
 
 func (app *App) initDatabase() error {
 	var err error
-	app.db, err = db.NewPostgresDB(app.conf.DatabaseConfig)
+	app.dbHelper = utils.NewPostgresDBHelper()
+	app.db, err = db.NewPostgresDB(app.conf.DatabaseConfig, app.dbHelper)
 	if err != nil {
 		return errs.NewAppCommonError("init database error", err)
 	}

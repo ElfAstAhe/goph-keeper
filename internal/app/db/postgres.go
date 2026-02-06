@@ -10,13 +10,14 @@ import (
 )
 
 type PostgresDB struct {
-	db   *sql.DB
-	kind utils.DatabaseKind
-	dsn  string
+	db     *sql.DB
+	kind   utils.DatabaseKind
+	dsn    string
+	helper utils.DBHelper
 }
 
 // NewPostgresDB - конструктор соединения с БД postgres
-func NewPostgresDB(dbConf *config.DatabaseConfig) (*PostgresDB, error) {
+func NewPostgresDB(dbConf *config.DatabaseConfig, helper utils.DBHelper) (*PostgresDB, error) {
 	//err := utils.DBValidateDSN(dbConf.DSN)
 	//if err != nil {
 	//	return nil, err
@@ -37,9 +38,10 @@ func NewPostgresDB(dbConf *config.DatabaseConfig) (*PostgresDB, error) {
 	}
 
 	return &PostgresDB{
-		db:   pg,
-		kind: KindPostgres,
-		dsn:  dbConf.DSN,
+		db:     pg,
+		kind:   KindPostgres,
+		dsn:    dbConf.DSN,
+		helper: helper,
 	}, nil
 }
 
@@ -61,4 +63,8 @@ func (db *PostgresDB) GetDsn() string {
 
 func (db *PostgresDB) GetDB() *sql.DB {
 	return db.db
+}
+
+func (db *PostgresDB) GetHelper() utils.DBHelper {
+	return db.helper
 }
