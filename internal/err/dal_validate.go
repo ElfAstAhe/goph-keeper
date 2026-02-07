@@ -1,8 +1,10 @@
 package err
 
-import "fmt"
+import (
+	"fmt"
+)
 
-// DalValidateError — ошибка уникальности данные
+// DalValidateError — ошибка проверки данные
 type DalValidateError struct {
 	Entity string // Какая сущность (например, "User" или "UserData")
 	Value  string // Какое значение вызвало конфликт (например, "login 'admin'")

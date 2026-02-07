@@ -15,5 +15,5 @@ func NewAppInvalidArgumentError(param string, value any) *AppInvalidArgumentErro
 }
 
 func (e *AppInvalidArgumentError) Error() string {
-	return fmt.Sprintf("invalid argument [%s] with value [%v]", e.Param, e.Value)
+	return fmt.Sprintf("CMN: invalid argument [%s] with value [%v]", e.Param, e.Value)
 }

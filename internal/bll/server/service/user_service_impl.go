@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/model"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
-	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
@@ -30,7 +30,7 @@ func NewUserService(userRepo repository.UserRepository, keysHelper *utils.RSAKey
 func (us *UserServiceImpl) Register(ctx context.Context, username, password, person, eMail string) (*model.User, error) {
 	// валидация входящих данных
 	if err := us.validateRegister(username, password); err != nil {
-		return nil, err
+		return nil, apperrs.NewBllValidateError("income", fmt.Sprintf("username: %s, password: censored", username), "invalid username or password", err)
 	}
 
 	// генерируем ключи
@@ -59,7 +59,7 @@ func (us *UserServiceImpl) Register(ctx context.Context, username, password, per
 	// создаём
 	user, err := us.userRepo.Create(ctx, inst)
 	if err != nil {
-		return nil, err
+		return nil, apperrs.NewBllCommonError("create user", err)
 	}
 
 	return user, nil
@@ -67,10 +67,10 @@ func (us *UserServiceImpl) Register(ctx context.Context, username, password, per
 
 func (us *UserServiceImpl) validateRegister(username, password string) error {
 	if strings.TrimSpace(username) == "" {
-		return errs.NewAppInvalidArgumentError("username", username)
+		return apperrs.NewBllValidateError("username", "empty", "username is empty", nil)
 	}
 	if strings.TrimSpace(password) == "" {
-		return errs.NewAppInvalidArgumentError("password", "password is empty")
+		return apperrs.NewBllValidateError("password", "empty", "password is empty", nil)
 	}
 
 	return nil
@@ -80,10 +80,7 @@ func (us *UserServiceImpl) ChangeKeys(ctx context.Context, userID string) (strin
 	// подгружаем данные
 	user, err := us.userRepo.Get(ctx, userID)
 	if err != nil {
-		return "", err
-	}
-	if err = us.validateUserExists(user); err != nil {
-		return "", err
+		return "", apperrs.NewBllCommonError("load user", err)
 	}
 
 	// генерируем пару ключей
@@ -99,7 +96,7 @@ func (us *UserServiceImpl) ChangeKeys(ctx context.Context, userID string) (strin
 	// сохраняем данные
 	user, err = us.userRepo.Change(ctx, user)
 	if err != nil {
-		return "", err
+		return "", apperrs.NewBllCommonError("save user", err)
 	}
 
 	return publicKey, nil
@@ -109,10 +106,7 @@ func (us *UserServiceImpl) GetProfile(ctx context.Context, userID string) (*mode
 	// подгружаем данные
 	user, err := us.userRepo.Get(ctx, userID)
 	if err != nil {
-		return nil, err
-	}
-	if err = us.validateUserExists(user); err != nil {
-		return nil, err
+		return nil, apperrs.NewBllCommonError("load user", err)
 	}
 
 	return user, nil
@@ -122,10 +116,7 @@ func (us *UserServiceImpl) UpdatePassword(ctx context.Context, userID, newPasswo
 	// подгружаем данные
 	user, err := us.userRepo.Get(ctx, userID)
 	if err != nil {
-		return err
-	}
-	if err = us.validateUserExists(user); err != nil {
-		return err
+		return apperrs.NewBllCommonError("load user", err)
 	}
 	// generate hash
 	newPasswordHash, err := us.keyCipher.EncryptString(newPassword)
@@ -147,7 +138,7 @@ func (us *UserServiceImpl) UpdatePassword(ctx context.Context, userID, newPasswo
 
 	_, err = us.userRepo.Change(ctx, user)
 	if err != nil {
-		return err
+		return apperrs.NewBllCommonError("save user", err)
 	}
 
 	return nil
@@ -167,23 +158,19 @@ func (us *UserServiceImpl) UpdatePassword(ctx context.Context, userID, newPasswo
 func (us *UserServiceImpl) validateUpdatePassword(newPassword, newPasswordHash, oldPasswordHash string, user *model.User) error {
 	// * empty
 	if strings.TrimSpace(newPassword) == "" {
-		return apperrs.NewBllCommonError("new password is empty", nil)
+		return apperrs.NewBllValidateError("newPassword", "empty", "new password is empty", nil)
+	}
+	// * empty
+	if strings.TrimSpace(oldPasswordHash) == "" {
+		return apperrs.NewBllValidateError("oldPassword", "empty", "old password is empty", nil)
 	}
 	// * same password
 	if newPasswordHash == user.PasswordHash {
-		return apperrs.NewBllCommonError("new password same as current old password", nil)
+		return apperrs.NewBllValidateError("newPassword", "censored", "new password same as current old password", nil)
 	}
 	// * old and current password match
 	if oldPasswordHash != user.PasswordHash {
-		return apperrs.NewBllCommonError("old password does not match current password", nil)
-	}
-
-	return nil
-}
-
-func (us *UserServiceImpl) validateUserExists(user *model.User) error {
-	if user == nil {
-		return apperrs.NewBllModelNotExistsError("User", "user not found", nil)
+		return apperrs.NewBllValidateError("oldPassword", "censored", "old password does not match current password", nil)
 	}
 
 	return nil
