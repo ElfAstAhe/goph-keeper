@@ -37,6 +37,7 @@ type App struct {
 	userRepo         irepo.UserRepository
 	userDataRepo     irepo.UserDataRepository
 	userService      service.UserService
+	authService      service.AuthService
 }
 
 // NewApp - конструктор структуры App

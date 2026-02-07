@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
+	"github.com/golang-jwt/jwt/v4"
 )
 
+// AuthService - сервис аутентификации и авторизации
 type AuthService interface {
-	// Authenticate проверяет login/pass, активность юзера
+	// Authenticate проверяет login/pass
 	// и возвращает подписанный JWT токен.
-	Authenticate(ctx context.Context, username, password string) (token string, err error)
+	Authenticate(ctx context.Context, username, password string) (*jwt.Token, error)
 
-	// Authorize проверяет токен и превращает его в объект UserInfo
-	// (тот самый, с методом InRole).
-	Authorize(ctx context.Context, token string) (*utils.UserInfo, error)
+	// Authorize выдаёт набор ролей subject
+	Authorize(ctx context.Context, subject string) (utils.Roles, error)
 }

@@ -102,6 +102,7 @@ func (app *App) initDependencies() error {
 
 	// services
 	app.userService = service.NewUserService(app.userRepo, app.keysHelper, app.log)
+	app.authService = service.NewAuthService(app.keyCipher, app.authHelper, app.userRepo)
 
 	return err
 }

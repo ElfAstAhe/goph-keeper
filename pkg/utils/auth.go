@@ -25,6 +25,21 @@ const (
 
 type Roles []string
 
+var (
+	UserRoles Roles = []string{
+		"user",
+	}
+
+	AdminRoles Roles = []string{
+		"admin",
+		"user",
+	}
+)
+
+func (r Roles) InRole(role string) bool {
+	return slices.Contains(r, role)
+}
+
 // UserInfo - содержит информацию о правах доступа пользователя
 type UserInfo struct {
 	user   string
