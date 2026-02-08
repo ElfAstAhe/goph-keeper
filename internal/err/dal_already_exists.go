@@ -11,6 +11,8 @@ type DalAlreadyExistsError struct {
 	Err    error  // Исходная ошибка из драйвера БД (опционально)
 }
 
+var ErrDalAlreadyExists *DalAlreadyExistsError
+
 func NewDalAlreadyExistsError(entity, value string, err error) *DalAlreadyExistsError {
 	return &DalAlreadyExistsError{
 		Entity: entity,

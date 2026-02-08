@@ -12,6 +12,8 @@ type BllValidateError struct {
 	Err    error  // Исходная ошибка из драйвера БД (опционально)
 }
 
+var ErrBllValidate *BllValidateError
+
 func NewBllValidateError(entity, value string, Msg string, err error) *BllValidateError {
 	return &BllValidateError{
 		Entity: entity,
@@ -23,6 +25,9 @@ func NewBllValidateError(entity, value string, Msg string, err error) *BllValida
 
 func (e *BllValidateError) Error() string {
 	msg := fmt.Sprintf("BLL: %s with value [%s] validation failed", e.Entity, e.Value)
+	if e.Value == "" {
+		msg = fmt.Sprintf("BLL: %s validation failed", e.Entity)
+	}
 	if e.Msg != "" {
 		msg = fmt.Sprintf("%s with message %s", msg, e.Msg)
 	}

@@ -10,6 +10,8 @@ type DalCommonError struct {
 	Err error  // Исходная ошибка из database/sql или драйвера
 }
 
+var ErrDalCommon *DalCommonError
+
 func NewDalCommonError(op, msg string, err error) *DalCommonError {
 	return &DalCommonError{Op: op, Msg: msg, Err: err}
 }

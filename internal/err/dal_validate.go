@@ -11,6 +11,8 @@ type DalValidateError struct {
 	Err    error  // Исходная ошибка из драйвера БД (опционально)
 }
 
+var ErrDalValidate *DalValidateError
+
 func NewDalValidateError(entity, value string, err error) *DalValidateError {
 	return &DalValidateError{
 		Entity: entity,

@@ -10,6 +10,8 @@ type DalSoftDeletedError struct {
 	Key    string // Ключ сущности, которая была удалена
 }
 
+var ErrDalSoftDeleted *DalSoftDeletedError
+
 func NewDalSoftDeletedError(entity, key string) *DalSoftDeletedError {
 	return &DalSoftDeletedError{
 		Entity: entity,
