@@ -104,10 +104,12 @@ func (app *App) initDependencies() error {
 	// services
 	app.userService = service.NewUserService(app.userRepo, app.keyCipher, app.keysHelper, app.log)
 	app.authService = service.NewAuthService(app.keyCipher, app.authHelper, app.userRepo)
+	app.userDataService = service.NewUserDataService(app.userDataRepo)
 
 	// facades
 	app.authFacade = facade.NewAuthFacadeImpl(app.jwtHelper, app.userService, app.authService)
 	app.userFacade = facade.NewUserFacadeImpl(app.userService, app.authHelper)
+	app.userDataFacade = facade.NewUserDataFacadeImpl(app.userDataService, app.authHelper)
 
 	return err
 }

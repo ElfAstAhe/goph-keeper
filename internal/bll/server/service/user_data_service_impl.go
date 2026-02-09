@@ -17,7 +17,16 @@ func NewUserDataService(userDataRepo repository.UserDataRepository) *UserDataSer
 	}
 }
 
-func (uds *UserDataServiceImpl) Get(ctx context.Context, userID string, key *model.UserDataKey) (*model.UserData, error) {
+func (uds *UserDataServiceImpl) Get(ctx context.Context, userID string, ID string) (*model.UserData, error) {
+	res, err := uds.userDataRepo.Get(ctx, userID, ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (uds *UserDataServiceImpl) GetByKey(ctx context.Context, userID string, key *model.UserDataKey) (*model.UserData, error) {
 	res, err := uds.userDataRepo.GetByKey(ctx, userID, key)
 	if err != nil {
 		return nil, err
@@ -50,5 +59,5 @@ func (uds *UserDataServiceImpl) ListAll(ctx context.Context, userID string) ([]*
 }
 
 func (uds *UserDataServiceImpl) Delete(ctx context.Context, userID string, ID string) error {
-	return uds.userDataRepo.Remove(ctx, ID)
+	return uds.userDataRepo.Remove(ctx, userID, ID)
 }

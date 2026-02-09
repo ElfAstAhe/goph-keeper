@@ -31,3 +31,11 @@ func NewUserDataDto(
 		ModifiedAt: modifiedAt,
 	}
 }
+
+func NewEmptyUserDataDto() *UserDataDto {
+	return &UserDataDto{
+		BinaryData: make([]byte, 0),
+		CreatedAt:  time.Now(),
+		ModifiedAt: time.Now(),
+	}
+}

@@ -7,25 +7,37 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 type AppChiRouter struct {
-	router     *chi.Mux
-	log        logger.Logger
-	conf       *config.Config
-	authFacade facade.AuthFacade
-	userFacade facade.UserFacade
+	router         *chi.Mux
+	log            logger.Logger
+	conf           *config.Config
+	authHelper     *utils.AuthHelper
+	authFacade     facade.AuthFacade
+	userFacade     facade.UserFacade
+	userDataFacade facade.UserDataFacade
 }
 
-func NewAppChiRouter(authFacade facade.AuthFacade, userFacade facade.UserFacade, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(
+	authFacade facade.AuthFacade,
+	userFacade facade.UserFacade,
+	userDataFacade facade.UserDataFacade,
+	authHelper *utils.AuthHelper,
+	conf *config.Config,
+	logger logger.Logger,
+) *AppChiRouter {
 	res := &AppChiRouter{
-		router:     chi.NewRouter(),
-		log:        logger.GetLogger("app router"),
-		conf:       conf,
-		authFacade: authFacade,
-		userFacade: userFacade,
+		router:         chi.NewRouter(),
+		log:            logger.GetLogger("app router"),
+		conf:           conf,
+		authHelper:     authHelper,
+		authFacade:     authFacade,
+		userFacade:     userFacade,
+		userDataFacade: userDataFacade,
 	}
 
 	// setup middleware
@@ -73,9 +85,18 @@ func (cr *AppChiRouter) setupRoutes() {
 		})
 		// users sub-router
 		r.Route("/users", func(r chi.Router) {
-			r.Get("/{username}/profile", cr.getApiUsersGetProfile)
-			r.Put("/{username}/keys", cr.putApiUsersUpdateKeys)
-			r.Put("/{username}/password", cr.putApiUsersChangePassword)
+			r.Get("/profile", cr.getApiUsersProfile)
+			r.Put("/keys", cr.putApiUsersKeys)
+			r.Put("/password", cr.putApiUsersPassword)
+
+			// data sub-router
+			r.Route("/data", func(r chi.Router) {
+				r.Get("/{id}", cr.getApiUsersData)
+				r.Get("/{dataKind}/{name}", cr.getApiUsersDataKey)
+				r.Post("/", cr.postApiUsersData)
+				r.Put("/{id}", cr.putApiUsersData)
+				r.Delete("/{id}", cr.deleteApiUsersData)
+			})
 		})
 	})
 }

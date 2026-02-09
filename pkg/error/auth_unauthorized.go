@@ -11,8 +11,11 @@ type AuthUnauthorizedError struct {
 
 var ErrAuthUnauthorized *AuthUnauthorizedError
 
-func NewAuthUnauthorizedError(message string, err error) AuthUnauthorizedError {
-	return AuthUnauthorizedError{message: message, err: err}
+func NewAuthUnauthorizedError(message string, err error) *AuthUnauthorizedError {
+	return &AuthUnauthorizedError{
+		message: message,
+		err:     err,
+	}
 }
 
 func (e *AuthUnauthorizedError) Error() string {

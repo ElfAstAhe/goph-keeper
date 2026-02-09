@@ -27,6 +27,7 @@ from
     user_data
 where
     id = $1
+and user_id = $2
 `
 
 	sqlUserDataGetByKey string = `
@@ -86,6 +87,7 @@ set
     modified_at = now()
 where
     id = $1
+and user_id = $2
 `
 
 	sqlUserDataRemoveAllByOwner string = `
@@ -126,8 +128,8 @@ func NewUserDataRepositoryPg(db utils.DB, dataCipherHelper *utils.CipherHelper) 
 	}
 }
 
-func (udrp *UserDataRepositoryPg) Get(ctx context.Context, id string) (*model.UserData, error) {
-	res, err := udrp.internalGetSingle(ctx, sqlUserDataGet, id)
+func (udrp *UserDataRepositoryPg) Get(ctx context.Context, userID, ID string) (*model.UserData, error) {
+	res, err := udrp.internalGetSingle(ctx, sqlUserDataGet, ID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +334,7 @@ func (udrp *UserDataRepositoryPg) beforeChange(userData *model.UserData) error {
 	return nil
 }
 
-func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, id string) error {
+func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, userID, id string) error {
 	// сохраняем
 	err := udrp.db.GetHelper().RunInTx(ctx, udrp.db.GetDB(), func(tx *sql.Tx) error {
 		// стейтмент
@@ -344,7 +346,7 @@ func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, id string) error {
 
 		err = udrp.db.GetHelper().ExecStmt(ctx, stmt, func(repErr error) (string, string, error) {
 			return "UserData", id, repErr
-		}, id)
+		}, id, userID)
 		if err != nil {
 			return apperrs.NewDalCommonError("UserDataRepo.Remove", "update data", err)
 		}
