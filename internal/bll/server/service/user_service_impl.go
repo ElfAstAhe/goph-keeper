@@ -19,10 +19,11 @@ type UserServiceImpl struct {
 	keysHelper *utils.RSAKeysHelper
 }
 
-func NewUserService(userRepo repository.UserRepository, keysHelper *utils.RSAKeysHelper, log logger.Logger) *UserServiceImpl {
+func NewUserService(userRepo repository.UserRepository, keyCipher utils.Cipher, keysHelper *utils.RSAKeysHelper, log logger.Logger) *UserServiceImpl {
 	return &UserServiceImpl{
 		userRepo:   userRepo,
 		log:        log,
+		keyCipher:  keyCipher,
 		keysHelper: keysHelper,
 	}
 }

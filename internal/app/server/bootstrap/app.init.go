@@ -4,6 +4,7 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	"github.com/ElfAstAhe/goph-keeper/internal/dal/server/repository"
+	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	migrations "github.com/ElfAstAhe/goph-keeper/pkg/migrations/goose"
@@ -101,8 +102,11 @@ func (app *App) initDependencies() error {
 	app.userRepo = repository.NewUserRepositoryPg(app.db, app.dataCipherHelper, app.userDataRepo)
 
 	// services
-	app.userService = service.NewUserService(app.userRepo, app.keysHelper, app.log)
+	app.userService = service.NewUserService(app.userRepo, app.keyCipher, app.keysHelper, app.log)
 	app.authService = service.NewAuthService(app.keyCipher, app.authHelper, app.userRepo)
+
+	// facades
+	app.authFacade = facade.NewAuthFacade(app.jwtHelper, app.userService, app.authService)
 
 	return err
 }

@@ -6,23 +6,44 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/mapper"
-	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
+	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
 type AuthFacadeImpl struct {
+	jwtHelper   *utils.JWTHelper
 	userService service.UserService
 	authService service.AuthService
 }
 
-func NewAuthFacade(userService service.UserService, authService service.AuthService) *AuthFacadeImpl {
+func NewAuthFacade(jwtHelper *utils.JWTHelper, userService service.UserService, authService service.AuthService) *AuthFacadeImpl {
 	return &AuthFacadeImpl{
+		jwtHelper:   jwtHelper,
 		userService: userService,
 		authService: authService,
 	}
 }
 
 func (a *AuthFacadeImpl) Login(ctx context.Context, login *dto.LoginDto) (*dto.LoginResultDto, error) {
+	// валидируем
+	if err := a.validateLogin(login); err != nil {
+		return nil, errs.NewAuthUnauthorizedError("unauthorized", err)
+	}
+	// проводим аутентификацию и авторизацию
+	token, err := a.authService.Authenticate(ctx, login.Username, login.Password)
+	if err != nil {
+		return nil, err
+	}
+	// получаем строку токена
+	tokenString, err := a.jwtHelper.BuildTokenStr(token)
+	if err != nil {
+		return nil, err
+	}
 
+	// результат
+	res := dto.NewLoginResultDto(tokenString, "")
+
+	return res, nil
 }
 
 func (a *AuthFacadeImpl) Register(ctx context.Context, register *dto.RegisterDto) (*dto.RegisterResultDto, error) {
@@ -42,4 +63,8 @@ func (a *AuthFacadeImpl) Register(ctx context.Context, register *dto.RegisterDto
 
 func (a *AuthFacadeImpl) validateRegister(register *dto.RegisterDto) error {
 	return register.Validate()
+}
+
+func (a *AuthFacadeImpl) validateLogin(login *dto.LoginDto) error {
+	return login.Validate()
 }

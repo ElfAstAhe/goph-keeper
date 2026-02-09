@@ -12,6 +12,7 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
+	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
 	_ "github.com/ElfAstAhe/goph-keeper/migrations/server"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
@@ -38,6 +39,7 @@ type App struct {
 	userDataRepo     irepo.UserDataRepository
 	userService      service.UserService
 	authService      service.AuthService
+	authFacade       facade.AuthFacade
 }
 
 // NewApp - конструктор структуры App
