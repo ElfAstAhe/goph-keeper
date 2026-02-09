@@ -29,3 +29,7 @@ func NewUserDto(
 		EMail:        email,
 	}
 }
+
+func NewEmptyUserDto() *UserDto {
+	return &UserDto{}
+}

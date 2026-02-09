@@ -40,6 +40,7 @@ type App struct {
 	userService      service.UserService
 	authService      service.AuthService
 	authFacade       facade.AuthFacade
+	userFacade       facade.UserFacade
 }
 
 // NewApp - конструктор структуры App

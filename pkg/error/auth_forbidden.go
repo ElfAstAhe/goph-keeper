@@ -1,6 +1,8 @@
 package error
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type AuthForbiddenError struct {
 	message string
@@ -17,7 +19,15 @@ func NewAuthForbiddenError(message string, err error) *AuthForbiddenError {
 }
 
 func (e *AuthForbiddenError) Error() string {
-	return fmt.Sprintf("forbidden [%s] with error [%v]", e.message, e.err)
+	msg := "AUTH: forbidden"
+	if e.message != "" {
+		msg = fmt.Sprintf("%s with message [%s]", msg, e.message)
+	}
+	if e.err != nil {
+		msg = fmt.Sprintf("%s: [%v]", msg, e.err)
+	}
+
+	return msg
 }
 
 func (e *AuthForbiddenError) Unwrap() error {

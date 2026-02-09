@@ -16,14 +16,16 @@ type AppChiRouter struct {
 	log        logger.Logger
 	conf       *config.Config
 	authFacade facade.AuthFacade
+	userFacade facade.UserFacade
 }
 
-func NewAppChiRouter(authFacade facade.AuthFacade, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(authFacade facade.AuthFacade, userFacade facade.UserFacade, conf *config.Config, logger logger.Logger) *AppChiRouter {
 	res := &AppChiRouter{
 		router:     chi.NewRouter(),
 		log:        logger.GetLogger("app router"),
 		conf:       conf,
 		authFacade: authFacade,
+		userFacade: userFacade,
 	}
 
 	// setup middleware

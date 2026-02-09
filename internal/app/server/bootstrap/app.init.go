@@ -106,7 +106,8 @@ func (app *App) initDependencies() error {
 	app.authService = service.NewAuthService(app.keyCipher, app.authHelper, app.userRepo)
 
 	// facades
-	app.authFacade = facade.NewAuthFacade(app.jwtHelper, app.userService, app.authService)
+	app.authFacade = facade.NewAuthFacadeImpl(app.jwtHelper, app.userService, app.authService)
+	app.userFacade = facade.NewUserFacadeImpl(app.userService, app.authHelper)
 
 	return err
 }

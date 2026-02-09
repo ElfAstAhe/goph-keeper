@@ -16,7 +16,7 @@ type AuthFacadeImpl struct {
 	authService service.AuthService
 }
 
-func NewAuthFacade(jwtHelper *utils.JWTHelper, userService service.UserService, authService service.AuthService) *AuthFacadeImpl {
+func NewAuthFacadeImpl(jwtHelper *utils.JWTHelper, userService service.UserService, authService service.AuthService) *AuthFacadeImpl {
 	return &AuthFacadeImpl{
 		jwtHelper:   jwtHelper,
 		userService: userService,
