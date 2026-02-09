@@ -16,6 +16,10 @@ func NewLoginDto(username, password string) *LoginDto {
 	}
 }
 
+func NewEmptyLoginDto() *LoginDto {
+	return NewLoginDto("", "")
+}
+
 func (ld *LoginDto) Validate() error {
 	if ld.Username == "" {
 		return errs.NewAppInvalidArgumentError("Username", "cannot be empty")

@@ -80,22 +80,22 @@ func (cr *AppChiRouter) setupRoutes() {
 	cr.router.Route("/api", func(r chi.Router) {
 		// auth sub-router
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/login", cr.postApiAuthLogin)       // POST /api/auth/login
-			r.Post("/register", cr.postApiAuthRegister) // POST /api/auth/register
+			r.Post("/login", cr.postAPIAuthLogin)       // POST /api/auth/login
+			r.Post("/register", cr.postAPIAuthRegister) // POST /api/auth/register
 		})
 		// users sub-router
 		r.Route("/users", func(r chi.Router) {
-			r.Get("/profile", cr.getApiUsersProfile)
-			r.Put("/keys", cr.putApiUsersKeys)
-			r.Put("/password", cr.putApiUsersPassword)
+			r.Get("/profile", cr.getAPIUsersProfile)
+			r.Put("/keys", cr.putAPIUsersKeys)
+			r.Put("/password", cr.putAPIUsersPassword)
 
 			// data sub-router
 			r.Route("/data", func(r chi.Router) {
-				r.Get("/{id}", cr.getApiUsersData)
-				r.Get("/{dataKind}/{name}", cr.getApiUsersDataKey)
-				r.Post("/", cr.postApiUsersData)
-				r.Put("/{id}", cr.putApiUsersData)
-				r.Delete("/{id}", cr.deleteApiUsersData)
+				r.Get("/{id}", cr.getAPIUsersData)
+				r.Get("/{dataKind}/{name}", cr.getAPIUsersDataKey)
+				r.Post("/", cr.postAPIUsersData)
+				r.Put("/{id}", cr.putAPIUsersData)
+				r.Delete("/{id}", cr.deleteAPIUsersData)
 			})
 		})
 	})

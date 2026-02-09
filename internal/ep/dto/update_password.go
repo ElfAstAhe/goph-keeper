@@ -11,3 +11,7 @@ func NewUpdatePasswordDto(oldPassword, newPassword string) *UpdatePasswordDto {
 		NewPassword: newPassword,
 	}
 }
+
+func NewEmptyUpdatePasswordDto() *UpdatePasswordDto {
+	return NewUpdatePasswordDto("", "")
+}

@@ -19,7 +19,15 @@ func NewAppCommonError(msg string, err error) *UtlCipherError {
 }
 
 func (e *AppCommonError) Error() string {
-	return fmt.Sprintf("cipher error with message [%s], with error [%s]", e.message, e.err)
+	msg := "CMN: error"
+	if e.message != "" {
+		msg = fmt.Sprintf("%s with message [%s]", msg, e.message)
+	}
+	if e.err != nil {
+		msg = fmt.Sprintf("%s: %v", msg, e.err)
+	}
+
+	return msg
 }
 
 func (e *AppCommonError) Unwrap() error {

@@ -22,6 +22,10 @@ func NewRegisterDto(username, password, person, eMail string) *RegisterDto {
 	}
 }
 
+func NewEmptyRegisterDto() *RegisterDto {
+	return NewRegisterDto("", "", "", "")
+}
+
 func (r *RegisterDto) Validate() error {
 	if strings.TrimSpace(r.Username) == "" {
 		return errs.NewAppInvalidArgumentError("RegisterDto Username", "empty")

@@ -16,7 +16,15 @@ func NewAppConfigItemError(param string, err error) *AppConfigItemError {
 }
 
 func (ch *AppConfigItemError) Error() string {
-	return fmt.Sprintf("invalid config item [%s] with error [%v]", ch.param, ch.err)
+	msg := "CMN: config item error"
+	if ch.param != "" {
+		msg = fmt.Sprintf("%s: param [%s]", msg, ch.param)
+	}
+	if ch.err != nil {
+		msg = fmt.Sprintf("%s: %v", msg, ch.err)
+	}
+
+	return msg
 }
 
 func (ch *AppConfigItemError) Param() string {
