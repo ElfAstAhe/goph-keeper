@@ -6,6 +6,7 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
+	appmware "github.com/ElfAstAhe/goph-keeper/internal/ep/rest/middleware"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	"github.com/go-chi/chi/v5"
@@ -17,6 +18,7 @@ type AppChiRouter struct {
 	log            logger.Logger
 	conf           *config.Config
 	authHelper     *utils.AuthHelper
+	jwtHTTPHelper  *utils.JWTHTTPHelper
 	authFacade     facade.AuthFacade
 	userFacade     facade.UserFacade
 	userDataFacade facade.UserDataFacade
@@ -27,14 +29,16 @@ func NewAppChiRouter(
 	userFacade facade.UserFacade,
 	userDataFacade facade.UserDataFacade,
 	authHelper *utils.AuthHelper,
+	jwtHTTPHelper *utils.JWTHTTPHelper,
 	conf *config.Config,
 	logger logger.Logger,
 ) *AppChiRouter {
 	res := &AppChiRouter{
 		router:         chi.NewRouter(),
-		log:            logger.GetLogger("app router"),
+		log:            logger,
 		conf:           conf,
 		authHelper:     authHelper,
+		jwtHTTPHelper:  jwtHTTPHelper,
 		authFacade:     authFacade,
 		userFacade:     userFacade,
 		userDataFacade: userDataFacade,
@@ -58,7 +62,7 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 
 func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// jwt auth extractor - extract user info from token
-	// ..
+	cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.jwtHTTPHelper, logger).Handle)
 	// requestID
 	cr.router.Use(middleware.RequestID)
 	// realIP

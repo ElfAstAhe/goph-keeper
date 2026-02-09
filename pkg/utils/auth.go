@@ -132,6 +132,10 @@ func NewDefaultAuthHelperEx(
 	return NewAuthHelper(DefaultContextUserInfo, DefaultCookieName, DefaultMetadataName, jwtHelper, jwtHTTPHelper, jwtGRPCHelper)
 }
 
+func (ah *AuthHelper) GetUserInfoContextName() ContextUserInfoType {
+	return ah.contextUserInfo
+}
+
 func (ah *AuthHelper) UserInfoFromToken(token *jwt.Token) (*UserInfo, error) {
 	if token == nil {
 		return nil, errs.NewUtlAuthError("nil jwt token", nil)
