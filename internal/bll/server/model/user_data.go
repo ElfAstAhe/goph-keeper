@@ -35,33 +35,23 @@ func (udk *UserDataKey) Validate() error {
 }
 
 type UserData struct {
-	ID         string
-	Key        *UserDataKey
+	UserDataShort
 	TextData   string
 	BinaryData []byte
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	Deleted    bool
 }
 
 func NewUserData(id string, name string, dataKind string, textData string, binaryData []byte, deleted bool) *UserData {
 	return &UserData{
-		ID:         id,
-		Key:        NewUserDataKey(name, dataKind),
-		TextData:   textData,
-		BinaryData: binaryData,
-		CreatedAt:  time.Now(),
-		ModifiedAt: time.Now(),
-		Deleted:    deleted,
+		UserDataShort: *NewUserDataShort(id, NewUserDataKey(name, dataKind), time.Now(), time.Now(), deleted),
+		TextData:      textData,
+		BinaryData:    binaryData,
 	}
 }
 
 func NewEmptyUserData() *UserData {
 	return &UserData{
-		Key:        NewEmptyUserDataKey(),
-		BinaryData: make([]byte, 0),
-		CreatedAt:  time.Now(),
-		ModifiedAt: time.Now(),
+		UserDataShort: *NewEmptyUserDataShort(),
+		BinaryData:    make([]byte, 0),
 	}
 }
 

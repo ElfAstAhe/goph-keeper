@@ -104,8 +104,6 @@ select
     id,
     name,
     kind,
-    text_data,
-    binary_data,
     created_at,
     modified_at,
     deleted
@@ -182,6 +180,15 @@ func (udrp *UserDataRepositoryPg) afterGet(res *model.UserData) (*model.UserData
 
 	if res.Deleted {
 		err = apperrs.NewDalSoftDeletedError("UserData", fmt.Sprintf("ID: [%s], Key: [%v]", res.ID, res.Key))
+	}
+
+	return res, err
+}
+
+func (udrp *UserDataRepositoryPg) afterGetMulti(res *model.UserDataShort) (*model.UserDataShort, error) {
+	var err error = nil
+	if res.Deleted {
+		err = apperrs.NewDalSoftDeletedError("UserDataShort", fmt.Sprintf("ID: [%s]", res.ID))
 	}
 
 	return res, err
@@ -351,30 +358,28 @@ func (udrp *UserDataRepositoryPg) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func (udrp *UserDataRepositoryPg) ListAllByOwner(ctx context.Context, userID string) ([]*model.UserData, error) {
+func (udrp *UserDataRepositoryPg) ListAllByOwner(ctx context.Context, userID string) ([]*model.UserDataShort, error) {
 	return udrp.internalGetMulti(ctx, sqlUserDataListAllByOwner, userID)
 }
 
-func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string, params ...any) ([]*model.UserData, error) {
+func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq string, params ...any) ([]*model.UserDataShort, error) {
 	rows, err := udrp.db.GetDB().QueryContext(ctx, sqlReq, params...)
 	if err != nil {
 		return nil, apperrs.NewDalCommonError("UserDataRepo.ListAllByOwner", "query", err)
 	}
 	defer rows.Close()
 
-	res := make([]*model.UserData, 0)
+	res := make([]*model.UserDataShort, 0)
 	for rows.Next() {
 		if err := ctx.Err(); err != nil {
 			return nil, apperrs.NewDalCommonError("UserDataRepo.ListAllByOwner", "check context", err)
 		}
 
-		entity := model.NewEmptyUserData()
+		entity := model.NewEmptyUserDataShort()
 
 		err := rows.Scan(&entity.ID,
 			&entity.Key.Name,
 			&entity.Key.DataKind,
-			&entity.TextData,
-			&entity.BinaryData,
 			&entity.CreatedAt,
 			&entity.ModifiedAt,
 			&entity.Deleted,
@@ -383,7 +388,7 @@ func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq s
 			return nil, apperrs.NewDalCommonError("UserDataRepo.ListAllByOwner", "scan rows", err)
 		}
 
-		entity, err = udrp.afterGet(entity)
+		entity, err = udrp.afterGetMulti(entity)
 		if err != nil {
 			return nil, apperrs.NewDalCommonError("UserDataRepo.ListAllByOwner", "post scan processing", err)
 		}

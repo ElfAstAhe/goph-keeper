@@ -15,5 +15,5 @@ type UserRepository interface {
 
 	Remove(ctx context.Context, id string) error
 
-	ListUserData(ctx context.Context, id string) ([]*model.UserData, error)
+	ListUserData(ctx context.Context, id string) ([]*model.UserDataShort, error)
 }

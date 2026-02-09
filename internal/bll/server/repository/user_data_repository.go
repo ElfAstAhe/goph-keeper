@@ -15,6 +15,6 @@ type UserDataRepository interface {
 
 	Remove(ctx context.Context, id string) error
 
-	ListAllByOwner(ctx context.Context, userID string) ([]*model.UserData, error)
+	ListAllByOwner(ctx context.Context, userID string) ([]*model.UserDataShort, error)
 	RemoveAllByOwner(ctx context.Context, userID string) error
 }

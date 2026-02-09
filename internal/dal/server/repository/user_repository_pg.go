@@ -321,6 +321,6 @@ func (urp *UserRepositoryPg) Remove(ctx context.Context, id string) (err error) 
 	return nil
 }
 
-func (urp *UserRepositoryPg) ListUserData(ctx context.Context, id string) ([]*model.UserData, error) {
+func (urp *UserRepositoryPg) ListUserData(ctx context.Context, id string) ([]*model.UserDataShort, error) {
 	return urp.userDataRepo.ListAllByOwner(ctx, id)
 }
