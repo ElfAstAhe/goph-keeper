@@ -1,4 +1,4 @@
-basePath: /api
+basePath: /
 definitions:
   github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto:
     properties:

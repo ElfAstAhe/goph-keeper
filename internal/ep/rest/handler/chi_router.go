@@ -50,8 +50,10 @@ func NewAppChiRouter(
 	// setup middleware
 	res.setupMiddleware(logger)
 
-	// mount
+	// mount debug
 	res.router.Mount("/debug", middleware.Profiler())
+	// mount swagger
+	res.router.Mount("/swagger/", swagh.WrapHandler)
 
 	// setup routes
 	res.setupRoutes()
@@ -107,6 +109,4 @@ func (cr *AppChiRouter) setupRoutes() {
 			})
 		})
 	})
-
-	cr.router.Get("/swagger/*", swagh.WrapHandler)
 }

@@ -24,7 +24,7 @@ import (
 // @license.url   http://www.apache.org
 
 // @host      localhost:8080
-// @BasePath  /api
+// @BasePath  /
 
 // @securityDefinitions.apikey  BearerAuth
 // @in                          cookie
