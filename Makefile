@@ -8,6 +8,7 @@ CLIENT_BINARY_NAME=goph-keeper-client
 CLIENT_BUILD_DIR=./cmd/client
 VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
+STAGE=DEV
 
 .PHONY: build run test clean
 
@@ -35,12 +36,14 @@ gen-http-client:
 
 # Сборка проекта с прокидыванием переменных
 build: gen-swagger
-	go build -ldflags "-X '$(MODULE_NAME)/config.Version=$(VERSION)' \
-	-X '$(MODULE_NAME)/config.BuildTime=$(BUILD_TIME)'" \
+	go build -ldflags "-X '$(MODULE_NAME)/internal/app/server/config.Version=$(VERSION)' \
+    -X '$(MODULE_NAME)/internal/app/server/config.Stage=$(STAGE)' \
+	-X '$(MODULE_NAME)/internal/app/server/config.BuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
 
-	go build -ldflags "-X '$(MODULE_NAME)/config.Version=$(VERSION)' \
-	-X '$(MODULE_NAME)/config.BuildTime=$(BUILD_TIME)'" \
+	go build -ldflags "-X '$(MODULE_NAME)/internal/app/client/config.Version=$(VERSION)' \
+    -X '$(MODULE_NAME)/internal/app/client/config.Stage=$(STAGE)' \
+	-X '$(MODULE_NAME)/internal/app/client/config.BuildTime=$(BUILD_TIME)'" \
 	-o ./bin/$(CLIENT_BINARY_NAME) $(CLIENT_BUILD_DIR)/main.go
 
 # Запуск проекта (сначала соберет, потом запустит)
