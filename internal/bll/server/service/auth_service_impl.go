@@ -30,9 +30,9 @@ func NewAuthService(keyCipher utils.Cipher, keysHelper *utils.RSAKeysHelper, aut
 	}
 }
 
-func (a *AuthServiceImpl) Authenticate(ctx context.Context, username, password string) (*jwt.Token, error) {
+func (a *AuthServiceImpl) Authenticate(ctx context.Context, username, encryptedPassword string) (*jwt.Token, error) {
 	// валидация
-	if err := a.validateAuthenticate(username, password); err != nil {
+	if err := a.validateAuthenticate(username, encryptedPassword); err != nil {
 		return nil, apperrs.NewBllValidateError("income", fmt.Sprintf("username [%s], password [censored]", username), "invalid income", err)
 	}
 	// подгружаем пользователя
@@ -40,19 +40,18 @@ func (a *AuthServiceImpl) Authenticate(ctx context.Context, username, password s
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("load user", err)
 	}
-
+	// готовим private RSA ключ
 	userPrivKey, err := a.keysHelper.ParsePrivateKey(user.PrivateKey)
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("parse private key", err)
 	}
 	// расшифровываем пароль (pub/priv RSA)
-	passwordDecrypted, err := a.keysHelper.DecryptString(password, userPrivKey)
+	password, err := a.keysHelper.DecryptString(encryptedPassword, userPrivKey)
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("decrypt password", err)
 	}
-
 	// готовим hash пароля
-	passwordHash, err := a.keyCipher.EncryptString(passwordDecrypted)
+	passwordHash, err := a.keyCipher.EncryptString(password)
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("error hash password", err)
 	}
