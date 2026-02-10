@@ -3,11 +3,25 @@ package handler
 import (
 	"net/http"
 
+	_ "github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/go-chi/chi/v5"
 )
 
+// getAPIUsersDataKey godoc
+// @Summary      Получение данных по бизнес-ключу
+// @Description  Возвращает расшифрованный секрет, используя тип данных и его имя (например, credential и Gmail)
+// @Tags         user-data
+// @Security     BearerAuth
+// @Param        dataKind  path      string  true  "Тип данных (credential, plaintext, binary, bankcard)"
+// @Param        name      path      string  true  "Имя секрета"
+// @Success      200       {object}  dto.UserDataDto
+// @Failure      400       {object}  dto.ErrorDto
+// @Failure      403       {object}  dto.ErrorDto
+// @Failure      404       {object}  dto.ErrorDto
+// @Failure      500       {object}  dto.ErrorDto
+// @Router       /api/users/data/{dataKind}/{name} [get]
 func (cr *AppChiRouter) getAPIUsersDataKey(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("getAPIUsersDataKey start")
 	defer cr.log.Info("getAPIUsersDataKey finish")

@@ -1,0 +1,734 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Сервис безопасного хранения паролей, карт и файлов.",
+        "title": "GophKeeper API",
+        "termsOfService": "Free use",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/ElfAstAhe/goph-keeper",
+            "email": "elf.ast.ahe@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/api/auth/login": {
+            "post": {
+                "description": "Проверяет учетные данные и возвращает JWT токен доступа",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "description": "Создает новый аккаунт, генерирует пару RSA ключей и возвращает данные созданного пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Регистрация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для регистрации",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/data": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список метаданных всех секретов текущего пользователя (без зашифрованных данных)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Получение списка всех секретов",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Перешифровывает и сохраняет изменения в секрете по его ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Обновление существующего секрета",
+                "parameters": [
+                    {
+                        "description": "Новые данные секрета (ID обязателен)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Шифрует и сохраняет новый секрет (пароль, текст, карту или файл) для текущего пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Создание нового секрета",
+                "parameters": [
+                    {
+                        "description": "Данные секрета (Kind, Name, TextData/BinaryData)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/data/{dataKind}/{name}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает расшифрованный секрет, используя тип данных и его имя (например, credential и Gmail)",
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Получение данных по бизнес-ключу",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Тип данных (credential, plaintext, binary, bankcard)",
+                        "name": "dataKind",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Имя секрета",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/data/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает расшифрованный секрет (пароль, карту или файл) по его идентификатору",
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Получение данных по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаляет запись с секретными данными по её ID (Soft Delete)",
+                "tags": [
+                    "user-data"
+                ],
+                "summary": "Удаление секрета",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Успешное удаление (нет контента)"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/keys": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Генерирует новую пару RSA ключей (приватный перешифровывается мастер-паролем) и возвращает новый публичный ключ",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Обновление мастер-ключей пользователя",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Проверяет старый пароль и устанавливает новый хеш (может потребоваться перешифрование RSA-ключей на клиенте)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Смена пароля пользователя",
+                "parameters": [
+                    {
+                        "description": "Старый и новый пароли",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пароль успешно изменен"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает публичную информацию о пользователе (ID, логин, роль, ФИО) из JWT-контекста",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Получение профиля текущего пользователя",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto": {
+            "type": "object",
+            "properties": {
+                "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "details": {
+                    "type": "string",
+                    "example": "field 'e-mail' is required"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid input data"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto": {
+            "type": "object",
+            "required": [
+                "e_mail",
+                "password",
+                "person",
+                "username"
+            ],
+            "properties": {
+                "e_mail": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "person": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto": {
+            "type": "object",
+            "required": [
+                "public_key"
+            ],
+            "properties": {
+                "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto": {
+            "type": "object",
+            "properties": {
+                "binary_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "data_kind": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "modified_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "text_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "password_hash": {
+                    "type": "string"
+                },
+                "person": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Введите токен в формате: Bearer \u003cJWT_TOKEN\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "cookie"
+        }
+    }
+}

@@ -11,6 +11,25 @@ import (
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 
+// @title           GophKeeper API
+// @version         1.0
+// @description     Сервис безопасного хранения паролей, карт и файлов.
+// @termsOfService  Free use
+
+// @contact.name   API Support
+// @contact.url    https://github.com/ElfAstAhe/goph-keeper
+// @contact.email  elf.ast.ahe@gmail.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org
+
+// @host      localhost:8080
+// @BasePath  /api
+
+// @securityDefinitions.apikey  BearerAuth
+// @in                          cookie
+// @name                        Authorization
+// @description                 Введите токен в формате: Bearer <JWT_TOKEN>
 func main() {
 	fmt.Println(config.BuildVersionInfo())
 
