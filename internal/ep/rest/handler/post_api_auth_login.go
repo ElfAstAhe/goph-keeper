@@ -8,6 +8,18 @@ import (
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 )
 
+// postAPIAuthLogin godoc
+// @Summary      Аутентификация пользователя
+// @Description  Проверяет учетные данные и возвращает JWT токен доступа
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input  body      dto.LoginDto  true  "Данные для входа"
+// @Success      200    {object}  dto.LoginResultDto
+// @Failure      400    {object}  dto.ErrorDto
+// @Failure      401    {object}  dto.ErrorDto
+// @Failure      500    {object}  dto.ErrorDto
+// @Router       /api/auth/login [post]
 func (cr *AppChiRouter) postAPIAuthLogin(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("postAPIAuthLogin start")
 	defer cr.log.Info("postAPIAuthLogin finish")

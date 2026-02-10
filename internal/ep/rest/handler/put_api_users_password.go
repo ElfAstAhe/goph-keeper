@@ -8,6 +8,19 @@ import (
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 )
 
+// putAPIUsersPassword godoc
+// @Summary      Смена пароля пользователя
+// @Description  Проверяет старый пароль и устанавливает новый хеш (может потребоваться перешифрование RSA-ключей на клиенте)
+// @Tags         users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        input  body      dto.UpdatePasswordDto  true  "Старый и новый пароли"
+// @Success      200    {object}  nil  "Пароль успешно изменен"
+// @Failure      400    {object}  dto.ErrorDto
+// @Failure      403    {object}  dto.ErrorDto
+// @Failure      500    {object}  dto.ErrorDto
+// @Router       /api/users/password [put]
 func (cr *AppChiRouter) putAPIUsersPassword(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("putAPIUsersPassword start")
 	defer cr.log.Info("putAPIUsersPassword finish")

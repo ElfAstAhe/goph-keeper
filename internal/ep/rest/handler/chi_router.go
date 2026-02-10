@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/ElfAstAhe/goph-keeper/docs"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
 	appmware "github.com/ElfAstAhe/goph-keeper/internal/ep/rest/middleware"
@@ -11,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/swaggo/files"
+	swagh "github.com/swaggo/http-swagger"
 )
 
 type AppChiRouter struct {
@@ -104,4 +107,6 @@ func (cr *AppChiRouter) setupRoutes() {
 			})
 		})
 	})
+
+	cr.router.Get("/swagger/*", swagh.WrapHandler)
 }

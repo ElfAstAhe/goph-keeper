@@ -18,6 +18,11 @@ gen-proto:
 		--go_opt=default_api_level=API_OPAQUE \
 		$(PROTO_PATH)/*.proto
 
+# Генерация swagger
+swag-gen:
+	swag init -g cmd/server/main.go --parseDependency --parseInternal
+#	swag init -g cmd/server/main.go
+
 # Сборка проекта с прокидыванием переменных
 build:
 	go build -ldflags "-X '$(MODULE_NAME)/config.Version=$(VERSION)' \

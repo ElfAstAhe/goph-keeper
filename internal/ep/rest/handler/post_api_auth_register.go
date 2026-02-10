@@ -8,6 +8,18 @@ import (
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 )
 
+// postAPIAuthRegister godoc
+// @Summary      Регистрация пользователя
+// @Description  Создает новый аккаунт, генерирует пару RSA ключей и возвращает данные созданного пользователя
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input  body      dto.RegisterDto  true  "Данные для регистрации"
+// @Success      201    {object}  dto.RegisterResultDto
+// @Failure      400    {object}  dto.ErrorDto
+// @Failure      409    {object}  dto.ErrorDto
+// @Failure      500    {object}  dto.ErrorDto
+// @Router       /api/auth/register [post]
 func (cr *AppChiRouter) postAPIAuthRegister(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("postAPIAuthRegister start")
 	defer cr.log.Info("postAPIAuthRegister finish")
