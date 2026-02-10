@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/client/config"
+	"github.com/ElfAstAhe/goph-keeper/pkg/client/rest"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
@@ -17,6 +18,7 @@ type App struct {
 	keysHelper *utils.RSAKeysHelper
 	conf       *config.AppConfig
 	logger     logger.Logger
+	client     rest.GophKeeperClient
 }
 
 func NewApp() *App {
@@ -38,13 +40,15 @@ func (app *App) Init() error {
 		return err
 	}
 
+	// config and params
 	app.conf = config.NewAppConfig(app.keysHelper)
 	log.Info("loading config")
 	if err = app.loadConfig(); err != nil {
 		return err
 	}
 
-	// ToDo: implement
+	// http client
+	app.client = rest.NewGophKeeperSimpleClient(app.conf.Address)
 
 	return nil
 }
