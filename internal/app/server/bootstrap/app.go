@@ -2,6 +2,8 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,36 +15,65 @@ import (
 	irepo "github.com/ElfAstAhe/goph-keeper/internal/bll/server/repository"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
+	"github.com/ElfAstAhe/goph-keeper/internal/ep/rest/handler"
 	_ "github.com/ElfAstAhe/goph-keeper/migrations/server"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 // App - приложение
 type App struct {
-	ctx              context.Context
-	cancel           context.CancelFunc
-	db               utils.DB
-	dbHelper         utils.DBHelper
-	conf             *config.Config
-	log              logger.Logger
-	keyCipher        utils.Cipher
-	dataCipher       utils.Cipher
+	// ctx - контекст приложения
+	ctx context.Context
+	// cancel - функция отмены контекста приложения
+	cancel context.CancelFunc
+	// db - БД приложения
+	db utils.DB
+	// dbHelper - набор вспомогательных утилит работы с БД
+	dbHelper utils.DBHelper
+	// conf - настройки приложения
+	conf *config.Config
+	// log - главный логер приложения
+	log logger.Logger
+	// keyCipher - генератор hash суммы
+	keyCipher utils.Cipher
+	// dataCipher - шифрование данных
+	dataCipher utils.Cipher
+	// dataCipherHelper - набор вспомогательных утилит шифрования
 	dataCipherHelper *utils.CipherHelper
-	keysHelper       *utils.RSAKeysHelper
-	jwtHelper        *utils.JWTHelper
-	jwtHTTPHelper    *utils.JWTHTTPHelper
-	jwtGRPCHelper    *utils.JWTGRPCHelper
-	authHelper       *utils.AuthHelper
-	wg               sync.WaitGroup
-	userRepo         irepo.UserRepository
-	userDataRepo     irepo.UserDataRepository
-	userService      service.UserService
-	authService      service.AuthService
-	userDataService  service.UserDataService
-	authFacade       facade.AuthFacade
-	userFacade       facade.UserFacade
-	userDataFacade   facade.UserDataFacade
+	// keysHelper - набор вспомогательных утилит Pub/Priv keys
+	keysHelper *utils.RSAKeysHelper
+	// jwtHelper - набор вспомогательных утилит jwt
+	jwtHelper *utils.JWTHelper
+	// jwtHTTPHelper - набор впомогательных утилит jwt/HTTP
+	jwtHTTPHelper *utils.JWTHTTPHelper
+	// jwtGRPCHelper - набор вспомогательных утилит jwt/gRPC
+	jwtGRPCHelper *utils.JWTGRPCHelper
+	// authHelper - набор вспомогательных утилит аутентификации
+	authHelper *utils.AuthHelper
+	// wg - рабочая группа
+	wg sync.WaitGroup
+	// userRepo - репозиторий пользователей
+	userRepo irepo.UserRepository
+	// userDataRepo - репозиторий данных пользователя
+	userDataRepo irepo.UserDataRepository
+	// userService - сервис работы с пользователем
+	userService service.UserService
+	// authService - сервис аутентификации
+	authService service.AuthService
+	// userDataService - сервис работы с данными пользователя, связка БЛ и данных
+	userDataService service.UserDataService
+	// authFacade - фасад аутентификации, связка между конечной точкой и сервисами
+	authFacade facade.AuthFacade
+	// userFacade - фасад работы с пользователямт, связка между конечной точкой (HTTP/gRPC) и сервисами (ядро)
+	userFacade facade.UserFacade
+	// userDataFacade - фасад работы с данными пользователя, связка между конечной точкой (HTTP/gRPC) и сервисами (ядро)
+	userDataFacade facade.UserDataFacade
+	// router - маршрутизация HTTP запросов
+	router *handler.AppChiRouter
+	// httpServer - HTTP сервер
+	httpServer *http.Server
 }
 
 // NewApp - конструктор структуры App
@@ -141,18 +172,18 @@ func (app *App) Run() error {
 	app.wg.Add(1)
 	go app.gracefulShutdown()
 
-	//var eg errgroup.Group
-	//log.Info("start servers...")
-	//// http
-	//eg.Go(func() error {
-	//    if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-	//        log.Errorf("Error starting http server with error [%v]", err)
-	//
-	//        return err
-	//    }
-	//
-	//    return nil
-	//})
+	var eg errgroup.Group
+	log.Info("start servers...")
+	// http
+	eg.Go(func() error {
+		if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Errorf("Error starting http server with error [%v]", err)
+
+			return err
+		}
+
+		return nil
+	})
 	//// gRPC
 	//eg.Go(func() error {
 	//    if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
@@ -164,9 +195,19 @@ func (app *App) Run() error {
 	//    return nil
 	//})
 	//
-	//return eg.Wait()
+	return eg.Wait()
+}
 
-	return nil
+func (app *App) launchHTTPServer() error {
+	log := app.log.GetLogger("bootstrap http server launch")
+	if app.conf.HTTPConfig.UseHTTPS {
+		log.Info("enable https")
+		return app.httpServer.ListenAndServeTLS(app.conf.HTTPConfig.CertPath, app.conf.HTTPConfig.PrivateKeyPath)
+	}
+
+	log.Info("enable http")
+
+	return app.httpServer.ListenAndServe()
 }
 
 // Stop - метод остановки приложения
@@ -228,10 +269,10 @@ func (app *App) gracefulShutdown() {
 	}
 
 	// stop http
-	//app.Log.Info("graceful shutdown http server")
-	//if err := app.httpServer.Shutdown(context.Background()); err != nil {
-	//    app.Log.Errorf("error graceful shutdown http server with error [%v]", err)
-	//}
+	app.log.Info("graceful shutdown http server")
+	if err := app.httpServer.Shutdown(context.Background()); err != nil {
+		app.log.Errorf("error graceful shutdown http server with error [%v]", err)
+	}
 	// stop gRPC
 	//app.Log.Info("graceful shutdown gRPC server")
 	//app.grpcServer.GracefulStop()

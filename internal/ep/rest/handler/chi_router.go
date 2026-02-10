@@ -62,7 +62,7 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 
 func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// jwt auth extractor - extract user info from token
-	cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.jwtHTTPHelper, logger).Handle)
+	cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// requestID
 	cr.router.Use(middleware.RequestID)
 	// realIP
@@ -100,6 +100,7 @@ func (cr *AppChiRouter) setupRoutes() {
 				r.Post("/", cr.postAPIUsersData)
 				r.Put("/{id}", cr.putAPIUsersData)
 				r.Delete("/{id}", cr.deleteAPIUsersData)
+				r.Get("/list", cr.getAPIUsersDataList)
 			})
 		})
 	})

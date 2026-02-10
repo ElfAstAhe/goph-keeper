@@ -12,9 +12,9 @@ func (cr *AppChiRouter) deleteAPIUsersData(rw http.ResponseWriter, r *http.Reque
 	cr.log.Info("deleteAPIUsersData start")
 	defer cr.log.Info("deleteAPIUsersData finish")
 
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
+	//if r.Body != nil {
+	//	defer r.Body.Close()
+	//}
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -24,7 +24,7 @@ func (cr *AppChiRouter) deleteAPIUsersData(rw http.ResponseWriter, r *http.Reque
 	}
 
 	err := cr.userDataFacade.Remove(r.Context(), id)
-	if err.Error != nil {
+	if err != nil {
 		cr.renderError(rw, apperrs.NewEpCommonError("deleteAPIUsersData", "remove user data", err))
 
 		return

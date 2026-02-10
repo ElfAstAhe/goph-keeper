@@ -16,13 +16,15 @@ import (
 // AuthServiceImpl - реализация сервиса аутентификации и авторизации
 type AuthServiceImpl struct {
 	keyCipher  utils.Cipher
+	keysHelper *utils.RSAKeysHelper
 	authHelper *utils.AuthHelper
 	userRepo   repository.UserRepository
 }
 
-func NewAuthService(keyCipher utils.Cipher, authHelper *utils.AuthHelper, userRepo repository.UserRepository) *AuthServiceImpl {
+func NewAuthService(keyCipher utils.Cipher, keysHelper *utils.RSAKeysHelper, authHelper *utils.AuthHelper, userRepo repository.UserRepository) *AuthServiceImpl {
 	return &AuthServiceImpl{
 		keyCipher:  keyCipher,
+		keysHelper: keysHelper,
 		authHelper: authHelper,
 		userRepo:   userRepo,
 	}
@@ -38,8 +40,19 @@ func (a *AuthServiceImpl) Authenticate(ctx context.Context, username, password s
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("load user", err)
 	}
+
+	userPrivKey, err := a.keysHelper.ParsePrivateKey(user.PrivateKey)
+	if err != nil {
+		return nil, apperrs.NewBllCommonError("parse private key", err)
+	}
+	// расшифровываем пароль (pub/priv RSA)
+	passwordDecrypted, err := a.keysHelper.DecryptString(password, userPrivKey)
+	if err != nil {
+		return nil, apperrs.NewBllCommonError("decrypt password", err)
+	}
+
 	// готовим hash пароля
-	passwordHash, err := a.keyCipher.EncryptString(password)
+	passwordHash, err := a.keyCipher.EncryptString(passwordDecrypted)
 	if err != nil {
 		return nil, apperrs.NewBllCommonError("error hash password", err)
 	}

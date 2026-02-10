@@ -24,22 +24,26 @@ func NewAuthExtractorMiddleware(authHelper *utils.AuthHelper, jwtHTTPHelper *uti
 
 func (aem *AuthExtractorMiddleware) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		aem.log.Info("NewAuthExtractorMiddleware.Handle start")
-		defer aem.log.Info("NewAuthExtractorMiddleware.Handle finish")
+		aem.log.Info("AuthExtractorMiddleware.Handle start")
+		defer aem.log.Info("AuthExtractorMiddleware.Handle finish")
 
 		userInfo, err := aem.authHelper.UserInfoFromHTTPRequest(r)
-		if err != nil {
-			aem.log.Errorf("AUTH MW: [%s] [%s] no user info: %v", r.Method, r.RequestURI, err)
-
-			next.ServeHTTP(rw, r)
-		} else {
-			aem.log.Info("NewAuthExtractorMiddleware.Handle userInfo placed into req context", userInfo)
+		if err == nil {
+			aem.log.Info("AuthExtractorMiddleware.Handle userInfo placed into req context", userInfo)
 
 			reqCtx := context.WithValue(r.Context(), aem.authHelper.GetUserInfoContextName(), userInfo)
 
 			req := r.WithContext(reqCtx)
 
 			next.ServeHTTP(rw, req)
+
+			return
 		}
+
+		if !(r.RequestURI == "/api/auth/register") {
+			aem.log.Errorf("AUTH MW: [%s] [%s] no user info: %v", r.Method, r.RequestURI, err)
+		}
+
+		next.ServeHTTP(rw, r)
 	})
 }

@@ -1,10 +1,13 @@
 package bootstrap
 
 import (
+	"net/http"
+
 	"github.com/ElfAstAhe/goph-keeper/internal/app/db"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
 	"github.com/ElfAstAhe/goph-keeper/internal/dal/server/repository"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
+	"github.com/ElfAstAhe/goph-keeper/internal/ep/rest/handler"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
 	migrations "github.com/ElfAstAhe/goph-keeper/pkg/migrations/goose"
@@ -103,7 +106,7 @@ func (app *App) initDependencies() error {
 
 	// services
 	app.userService = service.NewUserService(app.userRepo, app.keyCipher, app.keysHelper, app.log)
-	app.authService = service.NewAuthService(app.keyCipher, app.authHelper, app.userRepo)
+	app.authService = service.NewAuthService(app.keyCipher, app.keysHelper, app.authHelper, app.userRepo)
 	app.userDataService = service.NewUserDataService(app.userDataRepo)
 
 	// facades
@@ -121,13 +124,16 @@ func (app *App) initStartupServices() error {
 }
 
 func (app *App) initHTTPRouter() error {
-	// ToDo: implement
+	app.router = handler.NewAppChiRouter(app.authFacade, app.userFacade, app.userDataFacade, app.authHelper, app.jwtHTTPHelper, app.conf, app.log)
 
 	return nil
 }
 
 func (app *App) initHTTPServer() error {
-	// ToDo: implement
+	app.httpServer = &http.Server{
+		Addr:    app.conf.HTTPConfig.Address,
+		Handler: app.router.GetRouter(),
+	}
 
 	return nil
 }
