@@ -734,7 +734,7 @@ const docTemplate = `{
             "description": "Введите токен в формате: Bearer \u003cJWT_TOKEN\u003e",
             "type": "apiKey",
             "name": "Authorization",
-            "in": "cookie"
+            "in": "header"
         }
     }
 }`

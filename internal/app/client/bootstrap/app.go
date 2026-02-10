@@ -32,18 +32,36 @@ func NewApp() *App {
 func (app *App) Init() error {
 	log := app.logger.GetLogger("bootstrap init")
 
-	app.conf = config.NewConfig()
-	log.Info("loading config")
-	if err := app.loadConfig(); err != nil {
+	// helpers
+	err := app.initHelpers()
+	if err != nil {
 		return err
 	}
+
+	app.conf = config.NewAppConfig(app.keysHelper)
+	log.Info("loading config")
+	if err = app.loadConfig(); err != nil {
+		return err
+	}
+
+	// ToDo: implement
+
+	return nil
 }
 
 func (app *App) Run() error {
+	// ToDo: implement
 
+	return nil
 }
 
-func (app *App) Close() error {}
+func (app *App) Close() error {
+	app.cancel()
+
+	// ToDo: implement
+
+	return nil
+}
 
 func (app *App) GetLogger() logger.Logger {
 	return app.logger
@@ -60,6 +78,13 @@ func (app *App) loadConfig() error {
 	if err := app.conf.Validate(); err != nil {
 		return errs.NewAppConfigError("validate config error", err)
 	}
+
+	return nil
+}
+
+func (app *App) initHelpers() error {
+	// helpers
+	app.keysHelper = utils.NewRSAKeysHelper(utils.RSAKey2048)
 
 	return nil
 }

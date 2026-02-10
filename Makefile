@@ -19,9 +19,13 @@ gen-proto:
 		$(PROTO_PATH)/*.proto
 
 # Генерация swagger
-swag-gen:
+gen-swagger:
 	swag init -g cmd/server/main.go --parseDependency --parseInternal
 #	swag init -g cmd/server/main.go
+
+gen-http-client:
+#	oapi-codegen -package client -generate client docs/swagger.json > pkg/client/rest/api_client.gen.go
+	swagger generate client -f ./docs/swagger.json -A goph-keeper -t pkg/client/rest
 
 # Сборка проекта с прокидыванием переменных
 build:

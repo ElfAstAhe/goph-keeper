@@ -27,7 +27,7 @@ import (
 // @BasePath  /
 
 // @securityDefinitions.apikey  BearerAuth
-// @in                          cookie
+// @in                          header
 // @name                        Authorization
 // @description                 Введите токен в формате: Bearer <JWT_TOKEN>
 func main() {

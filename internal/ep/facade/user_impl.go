@@ -3,8 +3,8 @@ package facade
 import (
 	"context"
 
+	"github.com/ElfAstAhe/goph-keeper/api/rest/dto"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/service"
-	"github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/mapper"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"

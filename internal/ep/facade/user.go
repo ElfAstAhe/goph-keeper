@@ -3,7 +3,7 @@ package facade
 import (
 	"context"
 
-	"github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
+	"github.com/ElfAstAhe/goph-keeper/api/rest/dto"
 )
 
 type UserFacade interface {

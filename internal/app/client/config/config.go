@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
@@ -145,8 +146,12 @@ func (ac *AppConfig) loadCli() (err error) {
 }
 
 func (ac *AppConfig) loadFile() error {
+	var err error
 	if ac.opts.ConfigPath != "" {
-		ac.opts.ConfigPath = ac.buildDefaultConfigPath()
+		ac.opts.ConfigPath, err = ac.buildDefaultConfigPath()
+		if err != nil {
+			return errs.NewAppConfigError("build default config path", err)
+		}
 	}
 	f, err := os.OpenFile(ac.opts.ConfigPath, os.O_RDONLY, 0600)
 	if err != nil {
@@ -162,8 +167,25 @@ func (ac *AppConfig) loadFile() error {
 	return nil
 }
 
-func (ac *AppConfig) buildDefaultConfigPath() string {
+func (ac *AppConfig) buildDefaultConfigPath() (string, error) {
+	// 1. Получаем путь к запущенному бинарнику (например, /home/user/goph-keeper/bin/server)
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
 
+	// 2. Берем директорию бинарника (/home/user/goph-keeper/bin)
+	exeDir := filepath.Dir(exePath)
+
+	// 3. Поднимаемся на уровень выше, если бинарник в bin/ (опционально, зависит от структуры)
+	// Если конфиг лежит рядом с бинарником — оставляем exeDir.
+	// Если проект запущен через `go run`, конфиг обычно ищут в корне проекта.
+	projectRoot := filepath.Dir(exeDir)
+
+	// 4. Собираем путь (например, /home/user/goph-keeper/config/config.yaml)
+	configPath := filepath.Join(projectRoot, "goph-keeper-client-conf.json")
+
+	return configPath, nil
 }
 
 func (ac *AppConfig) UpdateConfig(address string, username string, password string, publicKey string) error {

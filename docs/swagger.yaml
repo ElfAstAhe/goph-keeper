@@ -476,7 +476,7 @@ paths:
 securityDefinitions:
   BearerAuth:
     description: 'Введите токен в формате: Bearer <JWT_TOKEN>'
-    in: cookie
+    in: header
     name: Authorization
     type: apiKey
 swagger: "2.0"

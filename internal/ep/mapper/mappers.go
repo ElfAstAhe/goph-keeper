@@ -1,8 +1,8 @@
 package mapper
 
 import (
+	"github.com/ElfAstAhe/goph-keeper/api/rest/dto"
 	"github.com/ElfAstAhe/goph-keeper/internal/bll/server/model"
-	"github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 )
 
