@@ -44,7 +44,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginDto"
                         }
                     }
                 ],
@@ -52,25 +52,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginResultDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -96,7 +96,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterDto"
                         }
                     }
                 ],
@@ -104,25 +104,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterResultDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -149,20 +149,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                                "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                             }
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -191,7 +191,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     }
                 ],
@@ -199,31 +199,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -252,7 +252,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     }
                 ],
@@ -260,31 +260,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -322,31 +322,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -377,25 +377,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -427,19 +427,19 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -464,19 +464,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ChangeKeysResultDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -507,7 +507,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UpdatePasswordDto"
                         }
                     }
                 ],
@@ -518,19 +518,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -555,25 +555,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDto"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto"
+                            "$ref": "#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto"
                         }
                     }
                 }
@@ -581,7 +581,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.ChangeKeysResultDto": {
             "type": "object",
             "properties": {
                 "public_key": {
@@ -589,7 +589,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto": {
             "type": "object",
             "properties": {
                 "code": {
@@ -606,7 +606,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginDto": {
             "type": "object",
             "properties": {
                 "password": {
@@ -617,7 +617,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginResultDto": {
             "type": "object",
             "properties": {
                 "refresh_token": {
@@ -628,7 +628,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterDto": {
             "type": "object",
             "required": [
                 "e_mail",
@@ -651,7 +651,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterResultDto": {
             "type": "object",
             "required": [
                 "public_key"
@@ -662,7 +662,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.UpdatePasswordDto": {
             "type": "object",
             "properties": {
                 "new_password": {
@@ -673,7 +673,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto": {
             "type": "object",
             "properties": {
                 "binary_data": {
@@ -702,7 +702,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto": {
+        "github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDto": {
             "type": "object",
             "properties": {
                 "active": {

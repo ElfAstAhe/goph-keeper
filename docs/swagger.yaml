@@ -1,11 +1,11 @@
 basePath: /
 definitions:
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.ChangeKeysResultDto:
     properties:
       public_key:
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto:
     properties:
       code:
         example: 400
@@ -17,21 +17,21 @@ definitions:
         example: Invalid input data
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginDto:
     properties:
       password:
         type: string
       username:
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginResultDto:
     properties:
       refresh_token:
         type: string
       token:
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterDto:
     properties:
       e_mail:
         type: string
@@ -47,21 +47,21 @@ definitions:
     - person
     - username
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterResultDto:
     properties:
       public_key:
         type: string
     required:
     - public_key
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.UpdatePasswordDto:
     properties:
       new_password:
         type: string
       old_password:
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto:
     properties:
       binary_data:
         items:
@@ -80,7 +80,7 @@ definitions:
       text_data:
         type: string
     type: object
-  github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto:
+  github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDto:
     properties:
       active:
         type: boolean
@@ -122,26 +122,26 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginDto'
+          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginDto'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.LoginResultDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.LoginResultDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       summary: Аутентификация пользователя
       tags:
       - auth
@@ -157,26 +157,26 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterDto'
+          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterDto'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.RegisterResultDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.RegisterResultDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       summary: Регистрация пользователя
       tags:
       - auth
@@ -191,16 +191,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+              $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
             type: array
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Получение списка всех секретов
@@ -217,30 +217,30 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Создание нового секрета
@@ -256,30 +256,30 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Обновление существующего секрета
@@ -304,23 +304,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Получение данных по бизнес-ключу
@@ -341,15 +341,15 @@ paths:
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Удаление секрета
@@ -368,19 +368,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDataDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDataDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Получение данных по ID
@@ -396,15 +396,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ChangeKeysResultDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ChangeKeysResultDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Обновление мастер-ключей пользователя
@@ -422,7 +422,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UpdatePasswordDto'
+          $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UpdatePasswordDto'
       produces:
       - application/json
       responses:
@@ -431,15 +431,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Смена пароля пользователя
@@ -455,19 +455,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.UserDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.UserDto'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_internal_ep_dto.ErrorDto'
+            $ref: '#/definitions/github_com_ElfAstAhe_goph-keeper_api_rest_dto.ErrorDto'
       security:
       - BearerAuth: []
       summary: Получение профиля текущего пользователя
