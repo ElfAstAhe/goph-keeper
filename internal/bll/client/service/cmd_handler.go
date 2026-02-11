@@ -30,7 +30,6 @@ func NewCmdHandlerImpl(client rest.GophKeeperClient, conf *config.AppConfig) *Cm
 }
 
 func (cp *CmdHandlerImpl) Process(ctx context.Context, command Command, opts *config.AppOptions) error {
-	// ToDo: implement
 
 	return errs.NewAppCommonError("not implemented", nil)
 }
