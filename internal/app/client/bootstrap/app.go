@@ -120,7 +120,7 @@ func (app *App) initDependencies() error {
 	app.client = rest.NewGophKeeperSimpleClient(app.settings.GetConfig().Address)
 
 	// services
-	app.cmdHandler = service.NewCmdHandlerImpl(app.client, app.settings.GetConfig())
+	app.cmdHandler = service.NewCmdHandlerImpl(app.client, app.settings, app.logger)
 	app.cmdService = service.NewCmdServiceImpl(app.cmdHandler)
 
 	return nil

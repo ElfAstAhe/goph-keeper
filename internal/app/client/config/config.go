@@ -177,7 +177,7 @@ func (as *AppSettings) loadCli() (err error) {
 
 func (as *AppSettings) loadFile() error {
 	var err error
-	if as.opts.ConfigPath != "" {
+	if as.opts.ConfigPath == "" {
 		as.opts.ConfigPath, err = as.buildDefaultConfigPath()
 		if err != nil {
 			return errs.NewAppConfigError("build default config path", err)
@@ -207,13 +207,8 @@ func (as *AppSettings) buildDefaultConfigPath() (string, error) {
 	// 2. Берем директорию бинарника (/home/user/goph-keeper/bin)
 	exeDir := filepath.Dir(exePath)
 
-	// 3. Поднимаемся на уровень выше, если бинарник в bin/ (опционально, зависит от структуры)
-	// Если конфиг лежит рядом с бинарником — оставляем exeDir.
-	// Если проект запущен через `go run`, конфиг обычно ищут в корне проекта.
-	projectRoot := filepath.Dir(exeDir)
-
 	// 4. Собираем путь (например, /home/user/goph-keeper/config/config.yaml)
-	configPath := filepath.Join(projectRoot, "goph-keeper-client-conf.json")
+	configPath := filepath.Join(exeDir, "goph-keeper-client-conf.json")
 
 	return configPath, nil
 }
@@ -269,7 +264,7 @@ func (as *AppSettings) Load() error {
 func (as *AppSettings) SaveFile() error {
 	f, err := os.OpenFile(as.opts.ConfigPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return err
+		return errs.NewAppCommonError(fmt.Sprintf("open file at [%s]", as.opts.ConfigPath), err)
 	}
 	defer f.Close()
 

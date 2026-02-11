@@ -5,7 +5,6 @@ import (
 
 	"github.com/ElfAstAhe/goph-keeper/internal/app/client/bootstrap"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/client/config"
-	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 
 func main() {
@@ -22,7 +21,7 @@ func main() {
 	if err := app.Init(); err != nil {
 		log.Errorf("app init failed: %v", err)
 
-		panic(errs.NewAppCommonError("APP: init failed", err))
+		panic(err)
 	}
 
 	// app run
@@ -30,7 +29,7 @@ func main() {
 	if err := app.Run(); err != nil {
 		log.Errorf("app run error: %v", err)
 
-		panic(errs.NewAppCommonError("APP: run failed", err))
+		panic(err)
 	}
 
 	// app close
