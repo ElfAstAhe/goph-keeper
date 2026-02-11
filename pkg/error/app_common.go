@@ -11,8 +11,8 @@ type AppCommonError struct {
 
 var ErrAppCommon *AppCommonError
 
-func NewAppCommonError(msg string, err error) *UtlCipherError {
-	return &UtlCipherError{
+func NewAppCommonError(msg string, err error) *AppCommonError {
+	return &AppCommonError{
 		message: msg,
 		err:     err,
 	}

@@ -1,5 +1,5 @@
 // Package config - application settings
-// Приоритет загрузки конфига
+// Приоритет загрузки конфига (от наивысшего к наименьшему)
 //   - CLI
 //   - file
 package config
@@ -80,53 +80,83 @@ type AppConfig struct {
 	Username          string `json:"username"`
 	EncryptedPassword string `json:"encrypted_password"`
 	PublicKey         string `json:"public_key"`
-	cmd               *AppCommands
-	opts              *AppOptions
-	fs                *flag.FlagSet
-	keysHelper        *utils.RSAKeysHelper
 }
 
-func NewAppConfig(keysHelper *utils.RSAKeysHelper) *AppConfig {
-	return &AppConfig{
+func NewEmptyAppConfig() *AppConfig {
+	return &AppConfig{}
+}
+
+func (ac *AppConfig) Init(conf *AppConfig) {
+	ac.Address = conf.Address
+	ac.Username = conf.Username
+	ac.EncryptedPassword = conf.EncryptedPassword
+	ac.PublicKey = conf.PublicKey
+}
+
+type AppSettings struct {
+	loadedConf *AppConfig
+	conf       *AppConfig
+	cmd        *AppCommands
+	opts       *AppOptions
+	fs         *flag.FlagSet
+	keysHelper *utils.RSAKeysHelper
+}
+
+func NewAppSettings(keysHelper *utils.RSAKeysHelper) *AppSettings {
+	return &AppSettings{
+		loadedConf: NewEmptyAppConfig(),
+		conf:       NewEmptyAppConfig(),
 		cmd:        NewEmptyAppCommands(),
 		opts:       NewEmptyAppOptions(),
 		keysHelper: keysHelper,
 	}
 }
 
-func (ac *AppConfig) initCli() {
-	ac.fs = flag.NewFlagSet("config", flag.PanicOnError)
-
-	ac.fs.BoolVar(&ac.cmd.GenConfig, FlagCmdGenConfig, false, "сгенерировать конфиг")
-	ac.fs.BoolVar(&ac.cmd.Register, FlagCmdRegister, false, "регистрация в сервисе")
-
-	ac.fs.BoolVar(&ac.cmd.Profile, FlagCmdProfile, false, "информация о профиле")
-	ac.fs.BoolVar(&ac.cmd.GenKeys, FlagCmdGenKeys, false, "сгенерировать новую пару RSA ключей")
-	ac.fs.BoolVar(&ac.cmd.ChangePassword, FlagCmdChangePassword, false, "сменить пароль")
-
-	ac.fs.BoolVar(&ac.cmd.Get, FlagCmdGet, false, "получить данные")
-	ac.fs.BoolVar(&ac.cmd.Put, FlagCmdPut, false, "сохранить данные")
-	ac.fs.BoolVar(&ac.cmd.Remove, FlagCmdRemove, false, "удалить данные")
-	ac.fs.BoolVar(&ac.cmd.List, FlagCmdList, false, "список данных")
-
-	ac.fs.StringVar(&ac.opts.ConfigPath, FlagOptConfig, "", "файл конфига")
-	ac.fs.StringVar(&ac.opts.Address, FlagOptAddress, "", "хост:порт (http://example.org:8080)")
-	ac.fs.StringVar(&ac.opts.Username, FlagOptUsername, "", "имя пользователя")
-	ac.fs.StringVar(&ac.opts.Password, FlagOptPassword, "", "пароль")
-	ac.fs.StringVar(&ac.opts.OldPassword, FLagOptOldPassword, "", "старый пароль, обязан совпадать с текущим паролем")
-	ac.fs.StringVar(&ac.opts.NewPassword, FlagOptNewPassword, "", "новый пароль, не пустой, не совпадает со старым")
-	ac.fs.StringVar(&ac.opts.DataKind, FlagOptDataKind, "", "тип сохранённых данных (credential,plaintext,binary,bankcard)")
-	ac.fs.StringVar(&ac.opts.Name, FlagOptName, "", "намиенование данных")
-	ac.fs.StringVar(&ac.opts.Data, FlagOptData, "", "текстовые данные")
-	ac.fs.StringVar(&ac.opts.Path, FlagOptPath, "", "путь к файлу конфига")
+func (as *AppSettings) GetCmd() *AppCommands {
+	return as.cmd
 }
 
-func (ac *AppConfig) loadCli() (err error) {
+func (as *AppSettings) GetOpts() *AppOptions {
+	return as.opts
+}
+
+func (as *AppSettings) GetConfig() *AppConfig {
+	return as.conf
+}
+
+func (as *AppSettings) initCli() {
+	as.fs = flag.NewFlagSet("config", flag.PanicOnError)
+
+	as.fs.BoolVar(&as.cmd.GenConfig, FlagCmdGenConfig, false, "сгенерировать конфиг")
+	as.fs.BoolVar(&as.cmd.Register, FlagCmdRegister, false, "регистрация в сервисе")
+
+	as.fs.BoolVar(&as.cmd.Profile, FlagCmdProfile, false, "информация о профиле")
+	as.fs.BoolVar(&as.cmd.GenKeys, FlagCmdGenKeys, false, "сгенерировать новую пару RSA ключей")
+	as.fs.BoolVar(&as.cmd.ChangePassword, FlagCmdChangePassword, false, "сменить пароль")
+
+	as.fs.BoolVar(&as.cmd.Get, FlagCmdGet, false, "получить данные")
+	as.fs.BoolVar(&as.cmd.Put, FlagCmdPut, false, "сохранить данные")
+	as.fs.BoolVar(&as.cmd.Remove, FlagCmdRemove, false, "удалить данные")
+	as.fs.BoolVar(&as.cmd.List, FlagCmdList, false, "список данных")
+
+	as.fs.StringVar(&as.opts.ConfigPath, FlagOptConfig, "", "файл конфига")
+	as.fs.StringVar(&as.opts.Address, FlagOptAddress, "", "хост:порт (http://example.org:8080)")
+	as.fs.StringVar(&as.opts.Username, FlagOptUsername, "", "имя пользователя")
+	as.fs.StringVar(&as.opts.Password, FlagOptPassword, "", "пароль")
+	as.fs.StringVar(&as.opts.OldPassword, FLagOptOldPassword, "", "старый пароль, обязан совпадать с текущим паролем")
+	as.fs.StringVar(&as.opts.NewPassword, FlagOptNewPassword, "", "новый пароль, не пустой, не совпадает со старым")
+	as.fs.StringVar(&as.opts.DataKind, FlagOptDataKind, "", "тип сохранённых данных (credential,plaintext,binary,bankcard)")
+	as.fs.StringVar(&as.opts.Name, FlagOptName, "", "намиенование данных")
+	as.fs.StringVar(&as.opts.Data, FlagOptData, "", "текстовые данные")
+	as.fs.StringVar(&as.opts.Path, FlagOptPath, "", "путь к файлу конфига")
+}
+
+func (as *AppSettings) loadCli() (err error) {
 	// init
-	ac.initCli()
+	as.initCli()
 
 	// act
-	if err = ac.fs.Parse(os.Args[1:]); err != nil {
+	if err = as.fs.Parse(os.Args[1:]); err != nil {
 		return errs.NewAppConfigError("parse cli flags", err)
 	}
 	defer func() {
@@ -145,33 +175,33 @@ func (ac *AppConfig) loadCli() (err error) {
 	return nil
 }
 
-func (ac *AppConfig) loadFile() error {
+func (as *AppSettings) loadFile() error {
 	var err error
-	if ac.opts.ConfigPath != "" {
-		ac.opts.ConfigPath, err = ac.buildDefaultConfigPath()
+	if as.opts.ConfigPath != "" {
+		as.opts.ConfigPath, err = as.buildDefaultConfigPath()
 		if err != nil {
 			return errs.NewAppConfigError("build default config path", err)
 		}
 	}
-	f, err := os.OpenFile(ac.opts.ConfigPath, os.O_RDONLY, 0600)
+	f, err := os.OpenFile(as.opts.ConfigPath, os.O_RDONLY, 0600)
 	if err != nil {
-		return err
+		return errs.NewAppConfigError("open config file", err)
 	}
 	defer f.Close()
 
 	decoder := json.NewDecoder(f)
-	if err = decoder.Decode(ac); err != nil {
-		return err
+	if err = decoder.Decode(as.loadedConf); err != nil {
+		return errs.NewAppConfigError("decode config JSON", err)
 	}
 
 	return nil
 }
 
-func (ac *AppConfig) buildDefaultConfigPath() (string, error) {
+func (as *AppSettings) buildDefaultConfigPath() (string, error) {
 	// 1. Получаем путь к запущенному бинарнику (например, /home/user/goph-keeper/bin/server)
 	exePath, err := os.Executable()
 	if err != nil {
-		return "", err
+		return "", errs.NewAppConfigError("get executable path", err)
 	}
 
 	// 2. Берем директорию бинарника (/home/user/goph-keeper/bin)
@@ -188,27 +218,36 @@ func (ac *AppConfig) buildDefaultConfigPath() (string, error) {
 	return configPath, nil
 }
 
-func (ac *AppConfig) UpdateConfig(address string, username string, password string, publicKey string) error {
+func (as *AppSettings) mergeConfig() error {
 	var err error
 
-	ac.Address = address
-	ac.Username = username
-	ac.PublicKey = publicKey
-	ac.EncryptedPassword, err = ac.encryptPassword(password, ac.PublicKey)
-	if err != nil {
-		return errs.NewAppConfigError("encrypt password", err)
+	// инициализируем
+	as.conf.Init(as.loadedConf)
+
+	// данные
+	if as.opts.Address != "" {
+		as.conf.Address = as.opts.Address
+	}
+	if as.opts.Username != "" {
+		as.conf.Username = as.opts.Username
+	}
+	if as.opts.Password != "" {
+		as.conf.EncryptedPassword, err = as.encryptPassword(as.opts.Password, as.conf.PublicKey)
+		if err != nil {
+			return errs.NewAppConfigError("encrypt password", err)
+		}
 	}
 
 	return nil
 }
 
-func (ac *AppConfig) encryptPassword(password string, publicKey string) (string, error) {
-	pubKey, err := ac.keysHelper.ParsePublicKey(publicKey)
+func (as *AppSettings) encryptPassword(password string, publicKey string) (string, error) {
+	pubKey, err := as.keysHelper.ParsePublicKey(publicKey)
 	if err != nil {
 		return "", errs.NewAppConfigError("parse public key", err)
 	}
 
-	encryptedPassword, err := ac.keysHelper.EncryptString(password, pubKey)
+	encryptedPassword, err := as.keysHelper.EncryptString(password, pubKey)
 	if err != nil {
 		return "", errs.NewAppConfigError("encrypt password", err)
 	}
@@ -216,22 +255,19 @@ func (ac *AppConfig) encryptPassword(password string, publicKey string) (string,
 	return encryptedPassword, nil
 }
 
-func (ac *AppConfig) Load() error {
-	err := ac.loadCli()
+func (as *AppSettings) Load() error {
+	err := as.loadCli()
 	if err != nil {
 		return errs.NewAppConfigError("load cli", err)
 	}
 
-	err = ac.loadFile()
-	if err != nil {
-		return errs.NewAppConfigError("load file", err)
-	}
+	_ = as.loadFile()
 
-	return nil
+	return as.mergeConfig()
 }
 
-func (ac *AppConfig) SaveFile() error {
-	f, err := os.OpenFile(ac.opts.ConfigPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+func (as *AppSettings) SaveFile() error {
+	f, err := os.OpenFile(as.opts.ConfigPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -239,21 +275,21 @@ func (ac *AppConfig) SaveFile() error {
 
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
-	return encoder.Encode(ac)
+	return encoder.Encode(as.conf)
 }
 
-func (ac *AppConfig) Validate() error {
-	if err := ac.cmd.Validate(); err != nil {
+func (as *AppSettings) Validate() error {
+	if err := as.cmd.Validate(); err != nil {
 		return errs.NewAppConfigError("validate cmd", err)
 	}
 
-	if ac.Address == "" {
+	if as.conf.Address == "" {
 		return errs.NewAppConfigItemError("address empty", nil)
 	}
-	if ac.Username == "" {
+	if as.conf.Username == "" {
 		return errs.NewAppConfigItemError("username empty", nil)
 	}
-	if ac.PublicKey == "" {
+	if as.conf.PublicKey == "" {
 		return errs.NewAppConfigItemError("public key empty", nil)
 	}
 

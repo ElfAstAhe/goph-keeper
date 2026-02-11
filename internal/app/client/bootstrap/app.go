@@ -14,13 +14,14 @@ import (
 
 // App - клиент goph-keeper
 type App struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	keysHelper   *utils.RSAKeysHelper
-	conf         *config.AppConfig
-	logger       logger.Logger
-	client       rest.GophKeeperClient
-	cmdProcessor *service.CommandProcessor
+	ctx        context.Context
+	cancel     context.CancelFunc
+	keysHelper *utils.RSAKeysHelper
+	settings   *config.AppSettings
+	logger     logger.Logger
+	client     rest.GophKeeperClient
+	cmdHandler service.CmdHandler
+	cmdService service.CmdService
 }
 
 func NewApp() *App {
@@ -43,7 +44,7 @@ func (app *App) Init() error {
 	}
 
 	// config and params
-	app.conf = config.NewAppConfig(app.keysHelper)
+	app.settings = config.NewAppSettings(app.keysHelper)
 	log.Info("loading config")
 	if err = app.loadConfig(); err != nil {
 		return err
@@ -54,77 +55,19 @@ func (app *App) Init() error {
 		return err
 	}
 
-	// http client
-	log.Info("http client")
-	app.client = rest.NewGophKeeperSimpleClient(app.conf.Address)
-
 	// command processor
-	log.Info("command processor")
-	if err = app.initCommandProcessor(); err != nil {
+	log.Info("init dependencies")
+	if err = app.initDependencies(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (app *App) initLogger() error {
-	// ToDo: implement
-
-	return nil
-}
-
-func (app *App) initCommandProcessor() error {
-	app.cmdProcessor = service.NewCommandProcessor(map[service.Command]service.ProcessorFunc{
-		service.CmdGenConfig:      app.cmdGenConfig,
-		service.CmdRegister:       app.cmdRegister,
-		service.CmdProfile:        app.cmdProfile,
-		service.CmdChangeKeys:     app.cmdChangeKeys,
-		service.CmdUpdatePassword: app.cmdUpdatePassword,
-		service.CmdGet:            app.cmdGet,
-		service.CmdSave:           app.cmdSave,
-		service.CmdDelete:         app.cmdDelete,
-		service.CmdList:           app.cmdList,
-	}, app.logger)
-
-	return nil
-}
-
-func (app *App) getCmd(cmd *config.AppCommands) (service.Command, error) {
-	if cmd.GenConfig {
-		return service.CmdGenConfig, nil
-	}
-	if cmd.Register {
-		return service.CmdRegister, nil
-	}
-
-	if cmd.Profile {
-		return service.CmdProfile, nil
-	}
-	if cmd.GenKeys {
-		return service.CmdChangeKeys, nil
-	}
-	if cmd.ChangePassword {
-		return service.CmdUpdatePassword, nil
-	}
-
-	if cmd.Get {
-		return service.CmdGet, nil
-	}
-	if cmd.Put {
-		return service.CmdSave, nil
-	}
-	if cmd.Remove {
-		return service.CmdDelete, nil
-	}
-	if cmd.List {
-		return service.CmdList, nil
-	}
-
-	return "", errs.NewAppCommonError("no command applied", nil)
-}
-
 func (app *App) Run() error {
-	// ToDo: implement
+	if err := app.cmdService.Execute(app.ctx, app.settings.GetCmd(), app.settings.GetOpts()); err != nil {
+		return errs.NewAppCommonError("app run", err)
+	}
 
 	return nil
 }
@@ -141,24 +84,44 @@ func (app *App) GetLogger() logger.Logger {
 	return app.logger
 }
 
-func (app *App) loadConfig() error {
-	log := app.logger.GetLogger("bootstrap load config")
-	if err := app.conf.Load(); err != nil {
-		return errs.NewAppCommonError("load config error", err)
-	}
-
-	log.Infof("config FINAL: [%+v]", app.conf)
-
-	if err := app.conf.Validate(); err != nil {
-		return errs.NewAppConfigError("validate config error", err)
-	}
+func (app *App) initHelpers() error {
+	// helpers
+	app.keysHelper = utils.NewRSAKeysHelper(utils.RSAKey2048)
 
 	return nil
 }
 
-func (app *App) initHelpers() error {
-	// helpers
-	app.keysHelper = utils.NewRSAKeysHelper(utils.RSAKey2048)
+func (app *App) loadConfig() error {
+	log := app.logger.GetLogger("bootstrap load config")
+	if err := app.settings.Load(); err != nil {
+		return errs.NewAppCommonError("load config error", err)
+	}
+
+	log.Infof("config FINAL: [%+v]", app.settings)
+
+	// ВНИМАНИЕ! Валидацию пропускаем!
+
+	return nil
+}
+
+func (app *App) initLogger() error {
+	appLogger, err := logger.NewZapLogger("INFO", "")
+	if err != nil {
+		return errs.NewAppCommonError("init logger error", err)
+	}
+
+	app.logger = appLogger
+
+	return nil
+}
+
+func (app *App) initDependencies() error {
+	// http client
+	app.client = rest.NewGophKeeperSimpleClient(app.settings.GetConfig().Address)
+
+	// services
+	app.cmdHandler = service.NewCmdHandlerImpl(app.client, app.settings.GetConfig())
+	app.cmdService = service.NewCmdServiceImpl(app.cmdHandler)
 
 	return nil
 }

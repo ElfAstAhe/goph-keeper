@@ -20,22 +20,22 @@ func main() {
 	// app init
 	log.Info("app init")
 	if err := app.Init(); err != nil {
-		log.Errorf("app init failed [%v]", err)
+		log.Errorf("app init failed: %v", err)
 
-		panic(errs.NewAppCommonError("app initialization failed", err))
+		panic(errs.NewAppCommonError("APP: init failed", err))
 	}
 
 	// app run
 	log.Info("app run")
 	if err := app.Run(); err != nil {
-		log.Errorf("app run error [%v]", err)
+		log.Errorf("app run error: %v", err)
 
-		panic(errs.NewAppCommonError("app run failed", err))
+		panic(errs.NewAppCommonError("APP: run failed", err))
 	}
 
 	// app close
 	log.Info("app close")
 	if err := app.Close(); err != nil {
-		log.Errorf("app close failed [%v]", err)
+		log.Errorf("app close failed: %v", err)
 	}
 }
