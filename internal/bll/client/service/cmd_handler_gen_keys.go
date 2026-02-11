@@ -8,16 +8,16 @@ import (
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )
 
-func (ch *CmdHandlerImpl) cmdProfile(ctx context.Context, options *config.AppOptions) error {
+func (ch *CmdHandlerImpl) cmdChangeKeys(ctx context.Context, options *config.AppOptions) error {
 	// валидация
-	err := ch.validateProfile(ctx, options)
+	err := ch.validateChangeKeys(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("Profile validation failed.", err)
+		return errs.NewAppCommonError("CHangeKeys validation failed.", err)
 	}
 	// предвариловка
 	err = ch.beforeCmd(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("Profile beforeCmd", err)
+		return errs.NewAppCommonError("ChangeKeys beforeCmd", err)
 	}
 	// выполнение
 	// аутентификация
@@ -28,24 +28,16 @@ func (ch *CmdHandlerImpl) cmdProfile(ctx context.Context, options *config.AppOpt
 
 	ch.log.Info("Successfully logged in")
 
-	// получаем профиль
-	res, err := ch.client.GetProfile(ctx)
+	res, err := ch.client.ChangeKeys(ctx)
 	if err != nil {
-		return errs.NewAppCommonError("Error getting profile", err)
+		return errs.NewAppCommonError("Error change keys", err)
 	}
 
-	ch.log.Info("Successfully got profile")
+	ch.log.Info("Successfully changed keys")
 
-	// выводим профиль
-	err = ch.logProfile(ctx, res)
+	err = ch.postChangeKeys(ctx, options, res)
 	if err != nil {
-		return errs.NewAppCommonError("Error report profile", err)
-	}
-
-	// постобработка
-	err = ch.postProfile(ctx, options, res)
-	if err != nil {
-		return errs.NewAppCommonError("Error post profile", err)
+		return errs.NewAppCommonError("error post change keys", err)
 	}
 
 	// сохраняем конфиг
@@ -61,7 +53,7 @@ func (ch *CmdHandlerImpl) cmdProfile(ctx context.Context, options *config.AppOpt
 	return nil
 }
 
-func (ch *CmdHandlerImpl) validateProfile(ctx context.Context, options *config.AppOptions) error {
+func (ch *CmdHandlerImpl) validateChangeKeys(ctx context.Context, options *config.AppOptions) error {
 	if ch.settings.GetConfig().Address == "" {
 		return errs.NewAppInvalidArgumentError("address", "empty")
 	}
@@ -72,18 +64,21 @@ func (ch *CmdHandlerImpl) validateProfile(ctx context.Context, options *config.A
 		options.Password == "" {
 		return errs.NewAppInvalidArgumentError("password", "empty")
 	}
+	if options.Password == "" {
+		return errs.NewAppInvalidArgumentError("password", "empty")
+	}
 
 	return nil
 }
 
-func (ch *CmdHandlerImpl) logProfile(ctx context.Context, result *dto.UserDto) error {
-	ch.log.Warnf("[profile]\n username [%s]\n person [%s]\n e-mail [%s]\n public key [%s]", result.Username, result.Person, result.EMail, result.PublicKey)
-
-	return nil
-}
-
-func (ch *CmdHandlerImpl) postProfile(ctx context.Context, options *config.AppOptions, res *dto.UserDto) error {
-	ch.settings.GetConfig().PublicKey = res.PublicKey
+func (ch *CmdHandlerImpl) postChangeKeys(ctx context.Context, options *config.AppOptions, result *dto.ChangeKeysResultDto) error {
+	var err error
+	// шифруем пароль
+	ch.settings.GetConfig().EncryptedPassword, err = ch.encryptPassword(options.Password, result.PublicKey)
+	if err != nil {
+		return errs.NewAppConfigError("encrypt password", err)
+	}
+	ch.settings.GetConfig().PublicKey = result.PublicKey
 
 	return nil
 }

@@ -41,7 +41,7 @@ func (uf *UserFacadeImpl) UpdatePassword(ctx context.Context, changePassword *dt
 		return errs.NewAuthForbiddenError("extract user info from context", err)
 	}
 
-	err = uf.userService.UpdatePassword(ctx, userInfo.UserID(), changePassword.OldPassword, changePassword.NewPassword)
+	err = uf.userService.UpdatePassword(ctx, userInfo.UserID(), changePassword.NewPassword, changePassword.OldPassword)
 	if err != nil {
 		return err
 	}

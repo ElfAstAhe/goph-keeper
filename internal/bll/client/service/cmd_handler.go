@@ -110,18 +110,6 @@ func (ch *CmdHandlerImpl) beforeCmd(ctx context.Context, opts *config.AppOptions
 	return nil
 }
 
-func (ch *CmdHandlerImpl) cmdChangeKeys(ctx context.Context, options *config.AppOptions) error {
-	// ToDo: implement
-
-	return errs.NewAppCommonError("not implemented", nil)
-}
-
-func (ch *CmdHandlerImpl) cmdUpdatePassword(ctx context.Context, options *config.AppOptions) error {
-	// ToDo: implement
-
-	return errs.NewAppCommonError("not implemented", nil)
-}
-
 func (ch *CmdHandlerImpl) cmdGet(ctx context.Context, options *config.AppOptions) error {
 	// ToDo: implement
 

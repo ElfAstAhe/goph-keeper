@@ -22,7 +22,7 @@ func NewGophKeeperSimpleClient(baseURL string) *GophKeeperSimpleClient {
 	return &GophKeeperSimpleClient{
 		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 600 * time.Second,
 		},
 	}
 }
