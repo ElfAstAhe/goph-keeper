@@ -26,6 +26,7 @@
 
 ### common options
 * `-config`            файл конфига
+* `-not-store-config`  не сохранять конфиг
 
 ### `gen-config`
 
@@ -42,6 +43,8 @@
 * `-address`       хост:порт (http://example.org:8080)
 * `-username`      имя пользователя
 * `-password`      пароль
+* `-person`        (опционально) имя и фамилия
+* `-e-mail`        (опционально) e-mail
 
 ### `profile`
 
@@ -59,7 +62,7 @@
 #### options
 * `-address`       (опционально) хост:порт (http://example.org:8080)
 * `-username`      (опционально) имя пользователя
-* `-password`      (опционально) пароль
+* `-password`      пароль
 
 ### `change-password`
 

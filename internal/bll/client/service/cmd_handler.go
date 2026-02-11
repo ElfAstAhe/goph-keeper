@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/pkg/client/rest"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/logger"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
 type CmdHandlerFunc func(ctx context.Context, options *config.AppOptions) error
@@ -17,32 +18,38 @@ type CmdHandler interface {
 }
 
 type CmdHandlerImpl struct {
-	settings *config.AppSettings
-	client   rest.GophKeeperClient
-	handlers map[Command]CmdHandlerFunc
-	log      logger.Logger
+	keysHelper *utils.RSAKeysHelper
+	settings   *config.AppSettings
+	client     rest.GophKeeperClient
+	handlers   map[Command]CmdHandlerFunc
+	log        logger.Logger
 }
 
-func NewCmdHandlerImpl(client rest.GophKeeperClient, settings *config.AppSettings, logger logger.Logger) *CmdHandlerImpl {
+func NewCmdHandlerImpl(keysHelper *utils.RSAKeysHelper, client rest.GophKeeperClient, settings *config.AppSettings, logger logger.Logger) *CmdHandlerImpl {
 	res := &CmdHandlerImpl{
-		client:   client,
-		settings: settings,
-		log:      logger.GetLogger("cmd handler"),
+		keysHelper: keysHelper,
+		client:     client,
+		settings:   settings,
+		log:        logger.GetLogger("cmd handler"),
 	}
 
 	return res.init()
 }
 
 func (ch *CmdHandlerImpl) Process(ctx context.Context, command Command, opts *config.AppOptions) error {
-	handler, err := ch.getHandlerFund(command)
+	handler, err := ch.getHandlerFunc(command)
 	if err != nil {
 		return errs.NewAppCommonError("get handler", err)
 	}
+
+	ch.log.Infof("command [%s] processing", command)
 
 	err = handler(ctx, opts)
 	if err != nil {
 		return errs.NewAppCommonError("handler process", err)
 	}
+
+	ch.log.Infof("command [%s] processed", command)
 
 	return nil
 }
@@ -65,7 +72,7 @@ func (ch *CmdHandlerImpl) init() *CmdHandlerImpl {
 	return ch
 }
 
-func (ch *CmdHandlerImpl) getHandlerFund(cmd Command) (CmdHandlerFunc, error) {
+func (ch *CmdHandlerImpl) getHandlerFunc(cmd Command) (CmdHandlerFunc, error) {
 	res, ok := ch.handlers[cmd]
 	if !ok {
 		return nil, errs.NewAppCommonError(fmt.Sprintf("not found handler for command [%s]", cmd), nil)
@@ -74,27 +81,33 @@ func (ch *CmdHandlerImpl) getHandlerFund(cmd Command) (CmdHandlerFunc, error) {
 	return res, nil
 }
 
-func (ch *CmdHandlerImpl) cmdGenConfig(ctx context.Context, options *config.AppOptions) error {
-	err := ch.settings.SaveFile()
+func (ch *CmdHandlerImpl) encryptPassword(password string, publicKey string) (string, error) {
+	pubKey, err := ch.keysHelper.ParsePublicKey(publicKey)
 	if err != nil {
-		return errs.NewAppCommonError("save config file", err)
+		return "", errs.NewAppConfigError("parse public key", err)
 	}
 
-	ch.log.Infof("config file saved at [%s]", options.ConfigPath)
+	encryptedPassword, err := ch.keysHelper.EncryptString(password, pubKey)
+	if err != nil {
+		return "", errs.NewAppConfigError("encrypt password", err)
+	}
+
+	return encryptedPassword, nil
+}
+
+func (ch *CmdHandlerImpl) beforeCmd(ctx context.Context, opts *config.AppOptions) error {
+	if opts == nil {
+		return errs.NewAppCommonError("options cannot be nil", nil)
+	}
+	if opts.Password != "" {
+		encryptedPassword, err := ch.encryptPassword(opts.Password, ch.settings.GetConfig().PublicKey)
+		if err != nil {
+			return errs.NewAppCommonError("encrypt password", err)
+		}
+		ch.settings.GetConfig().EncryptedPassword = encryptedPassword
+	}
 
 	return nil
-}
-
-func (ch *CmdHandlerImpl) cmdRegister(ctx context.Context, options *config.AppOptions) error {
-	// ToDo: implement
-
-	return errs.NewAppCommonError("not implemented", nil)
-}
-
-func (ch *CmdHandlerImpl) cmdProfile(ctx context.Context, options *config.AppOptions) error {
-	// ToDo: implement
-
-	return errs.NewAppCommonError("not implemented", nil)
 }
 
 func (ch *CmdHandlerImpl) cmdChangeKeys(ctx context.Context, options *config.AppOptions) error {

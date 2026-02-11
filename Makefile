@@ -56,4 +56,4 @@ test:
 
 # Очистка бинарников
 clean:
-	rm -rf ./bin
+	rm -rf ./bin/*

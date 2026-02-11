@@ -7,7 +7,8 @@ import (
 
 // общие опции
 const (
-	FlagOptConfig string = "config"
+	FlagOptConfig         string = "config"
+	FlagOptNotStoreConfig string = "not-store-config"
 )
 
 // команды первого запуска
@@ -35,6 +36,8 @@ const (
 	FlagOptAddress     string = "address"
 	FlagOptUsername    string = "username"
 	FlagOptPassword    string = "password"
+	FlagOptPerson      string = "person"
+	FlagOptEMail       string = "e-mail"
 	FLagOptOldPassword string = "old-password"
 	FlagOptNewPassword string = "new-password"
 	FlagOptDataKind    string = "data-kind"

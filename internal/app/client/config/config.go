@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
-	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
 type AppCommands struct {
@@ -59,16 +58,19 @@ func (c *AppCommands) cmdCount(commands ...bool) int {
 }
 
 type AppOptions struct {
-	ConfigPath  string
-	Address     string
-	Username    string
-	Password    string
-	OldPassword string
-	NewPassword string
-	DataKind    string
-	Name        string
-	Data        string
-	Path        string
+	ConfigPath     string
+	NotStoreConfig bool
+	Address        string
+	Username       string
+	Password       string
+	Person         string
+	EMail          string
+	OldPassword    string
+	NewPassword    string
+	DataKind       string
+	Name           string
+	Data           string
+	Path           string
 }
 
 func NewEmptyAppOptions() *AppOptions {
@@ -99,16 +101,14 @@ type AppSettings struct {
 	cmd        *AppCommands
 	opts       *AppOptions
 	fs         *flag.FlagSet
-	keysHelper *utils.RSAKeysHelper
 }
 
-func NewAppSettings(keysHelper *utils.RSAKeysHelper) *AppSettings {
+func NewAppSettings() *AppSettings {
 	return &AppSettings{
 		loadedConf: NewEmptyAppConfig(),
 		conf:       NewEmptyAppConfig(),
 		cmd:        NewEmptyAppCommands(),
 		opts:       NewEmptyAppOptions(),
-		keysHelper: keysHelper,
 	}
 }
 
@@ -140,9 +140,12 @@ func (as *AppSettings) initCli() {
 	as.fs.BoolVar(&as.cmd.List, FlagCmdList, false, "список данных")
 
 	as.fs.StringVar(&as.opts.ConfigPath, FlagOptConfig, "", "файл конфига")
+	as.fs.BoolVar(&as.opts.NotStoreConfig, FlagOptNotStoreConfig, false, "не сохранять конфиг")
 	as.fs.StringVar(&as.opts.Address, FlagOptAddress, "", "хост:порт (http://example.org:8080)")
 	as.fs.StringVar(&as.opts.Username, FlagOptUsername, "", "имя пользователя")
 	as.fs.StringVar(&as.opts.Password, FlagOptPassword, "", "пароль")
+	as.fs.StringVar(&as.opts.Person, FlagOptPerson, "", "имя и фамилия")
+	as.fs.StringVar(&as.opts.EMail, FlagOptEMail, "", "адрес электронной почты")
 	as.fs.StringVar(&as.opts.OldPassword, FLagOptOldPassword, "", "старый пароль, обязан совпадать с текущим паролем")
 	as.fs.StringVar(&as.opts.NewPassword, FlagOptNewPassword, "", "новый пароль, не пустой, не совпадает со старым")
 	as.fs.StringVar(&as.opts.DataKind, FlagOptDataKind, "", "тип сохранённых данных (credential,plaintext,binary,bankcard)")
@@ -214,8 +217,6 @@ func (as *AppSettings) buildDefaultConfigPath() (string, error) {
 }
 
 func (as *AppSettings) mergeConfig() error {
-	var err error
-
 	// инициализируем
 	as.conf.Init(as.loadedConf)
 
@@ -226,28 +227,8 @@ func (as *AppSettings) mergeConfig() error {
 	if as.opts.Username != "" {
 		as.conf.Username = as.opts.Username
 	}
-	if as.opts.Password != "" {
-		as.conf.EncryptedPassword, err = as.encryptPassword(as.opts.Password, as.conf.PublicKey)
-		if err != nil {
-			return errs.NewAppConfigError("encrypt password", err)
-		}
-	}
 
 	return nil
-}
-
-func (as *AppSettings) encryptPassword(password string, publicKey string) (string, error) {
-	pubKey, err := as.keysHelper.ParsePublicKey(publicKey)
-	if err != nil {
-		return "", errs.NewAppConfigError("parse public key", err)
-	}
-
-	encryptedPassword, err := as.keysHelper.EncryptString(password, pubKey)
-	if err != nil {
-		return "", errs.NewAppConfigError("encrypt password", err)
-	}
-
-	return encryptedPassword, nil
 }
 
 func (as *AppSettings) Load() error {

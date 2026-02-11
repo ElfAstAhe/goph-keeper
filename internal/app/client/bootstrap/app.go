@@ -44,7 +44,7 @@ func (app *App) Init() error {
 	}
 
 	// config and params
-	app.settings = config.NewAppSettings(app.keysHelper)
+	app.settings = config.NewAppSettings()
 	log.Info("loading config")
 	if err = app.loadConfig(); err != nil {
 		return err
@@ -92,12 +92,9 @@ func (app *App) initHelpers() error {
 }
 
 func (app *App) loadConfig() error {
-	log := app.logger.GetLogger("bootstrap load config")
 	if err := app.settings.Load(); err != nil {
 		return errs.NewAppCommonError("load config error", err)
 	}
-
-	log.Infof("config FINAL: [%+v]", app.settings)
 
 	// ВНИМАНИЕ! Валидацию пропускаем!
 
@@ -120,7 +117,7 @@ func (app *App) initDependencies() error {
 	app.client = rest.NewGophKeeperSimpleClient(app.settings.GetConfig().Address)
 
 	// services
-	app.cmdHandler = service.NewCmdHandlerImpl(app.client, app.settings, app.logger)
+	app.cmdHandler = service.NewCmdHandlerImpl(app.keysHelper, app.client, app.settings, app.logger)
 	app.cmdService = service.NewCmdServiceImpl(app.cmdHandler)
 
 	return nil
