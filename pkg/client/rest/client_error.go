@@ -1,6 +1,8 @@
 package rest
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ClientError struct {
 	Op         string
@@ -12,9 +14,16 @@ type ClientError struct {
 var ErrClient *ClientError
 
 func NewClientError(op string, statusCode int, message string, err error) *ClientError {
+	code := statusCode
+	if err != nil {
+		clientErr, ok := err.(*ClientError)
+		if ok {
+			code = clientErr.StatusCode
+		}
+	}
 	return &ClientError{
 		Op:         op,
-		StatusCode: statusCode,
+		StatusCode: code,
 		Message:    message,
 		Err:        err,
 	}
