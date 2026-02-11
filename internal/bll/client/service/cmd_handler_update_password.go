@@ -11,12 +11,12 @@ func (ch *CmdHandlerImpl) cmdUpdatePassword(ctx context.Context, options *config
 	// валидация
 	err := ch.validateUpdatePassword(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("CHangeKeys validation failed.", err)
+		return errs.NewAppCommonError("UpdatePassword validation failed.", err)
 	}
 	// предвариловка
 	err = ch.beforeCmd(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("ChangeKeys beforeCmd", err)
+		return errs.NewAppCommonError("UpdatePassword beforeCmd", err)
 	}
 	// выполнение
 	// аутентификация

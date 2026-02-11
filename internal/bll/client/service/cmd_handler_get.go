@@ -20,12 +20,12 @@ func (ch *CmdHandlerImpl) cmdGet(ctx context.Context, options *config.AppOptions
 	// валидация
 	err := ch.validateGet(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("CHangeKeys validation failed.", err)
+		return errs.NewAppCommonError("Get validation failed.", err)
 	}
 	// предвариловка
 	err = ch.beforeCmd(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("ChangeKeys beforeCmd", err)
+		return errs.NewAppCommonError("Get beforeCmd", err)
 	}
 	// выполнение
 	// аутентификация
@@ -91,7 +91,7 @@ func (ch *CmdHandlerImpl) validateGet(ctx context.Context, options *config.AppOp
 func (ch *CmdHandlerImpl) postGet(ctx context.Context, opts *config.AppOptions, result *dto.UserDataDto) error {
 	var err error
 	// пост обработка только для типа binary, сохранение файла
-	if opts.DataKind != dto.UserDataKindBinary {
+	if opts.DataKind == dto.UserDataKindBinary {
 		if opts.Path == "" {
 			opts.Path, err = ch.buildDefaultBinaryDataPath(result)
 			if err != nil {
@@ -118,8 +118,7 @@ func (ch *CmdHandlerImpl) postGet(ctx context.Context, opts *config.AppOptions, 
 }
 
 func (ch *CmdHandlerImpl) logGet(ctx context.Context, res *dto.UserDataDto) error {
-	ch.log.Infof("[user data]\n data kind: %s\n name: %s\n created at: [%v] modified at [%v]", res.DataKind, res.Name, res.CreatedAt, res.ModifiedAt)
-	ch.log.Infof("text data [%s]", res.TextData)
+	ch.log.Infof("[user data]\n data kind: %s\n name: %s\n created at: [%v]\n modified at [%v]\n text data: %s", res.DataKind, res.Name, res.CreatedAt, res.ModifiedAt, res.TextData)
 	if res.DataKind == dto.UserDataKindBinary {
 		ch.log.Infof("binary data length [%d]", len(res.BinaryData))
 	}

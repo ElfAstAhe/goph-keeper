@@ -12,7 +12,7 @@ func (ch *CmdHandlerImpl) cmdChangeKeys(ctx context.Context, options *config.App
 	// валидация
 	err := ch.validateChangeKeys(ctx, options)
 	if err != nil {
-		return errs.NewAppCommonError("CHangeKeys validation failed.", err)
+		return errs.NewAppCommonError("ChangeKeys validation failed.", err)
 	}
 	// предвариловка
 	err = ch.beforeCmd(ctx, options)
