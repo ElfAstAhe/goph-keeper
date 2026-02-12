@@ -19,7 +19,15 @@ func NewUtlCipherError(msg string, err error) *UtlCipherError {
 }
 
 func (e *UtlCipherError) Error() string {
-	return fmt.Sprintf("cipher error with message [%s], with error [%s]", e.message, e.err)
+	msg := "UTL: cipher error"
+	if e.message != "" {
+		msg = fmt.Sprintf("%s message [%s]", msg, e.message)
+	}
+	if e.err != nil {
+		msg = fmt.Sprintf("%s: %v", msg, e.err)
+	}
+
+	return msg
 }
 
 func (e *UtlCipherError) Unwrap() error {

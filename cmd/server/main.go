@@ -24,10 +24,10 @@ import (
 // @license.url   http://www.apache.org
 
 // @host      localhost:8080
-// @BasePath  /api
+// @BasePath  /
 
 // @securityDefinitions.apikey  BearerAuth
-// @in                          cookie
+// @in                          header
 // @name                        Authorization
 // @description                 Введите токен в формате: Bearer <JWT_TOKEN>
 func main() {

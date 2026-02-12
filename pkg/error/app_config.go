@@ -10,7 +10,10 @@ type AppConfigError struct {
 var ErrAppConfig *AppConfigError
 
 func NewAppConfigError(message string, err error) *AppConfigError {
-	return &AppConfigError{message, err}
+	return &AppConfigError{
+		message: message,
+		err:     err,
+	}
 }
 
 func (e *AppConfigError) Error() string {

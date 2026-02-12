@@ -392,6 +392,10 @@ func (udrp *UserDataRepositoryPg) internalGetMulti(ctx context.Context, sqlReq s
 
 		entity, err = udrp.afterGetMulti(entity)
 		if err != nil {
+			if errors.As(err, &apperrs.ErrDalSoftDeleted) {
+				continue
+			}
+
 			return nil, apperrs.NewDalCommonError("UserDataRepo.ListAllByOwner", "post scan processing", err)
 		}
 

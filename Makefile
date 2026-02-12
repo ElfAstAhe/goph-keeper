@@ -2,10 +2,13 @@
 PROTO_PATH=api/proto
 PROTO_OUT=pkg/api/gophkeeper
 MODULE_NAME=github.com/ElfAstAhe/goph-keeper
-BINARY_NAME=server
-BUILD_DIR=./cmd/server
+SERVER_BINARY_NAME=goph-keeper-server
+SERVER_BUILD_DIR=./cmd/server
+CLIENT_BINARY_NAME=goph-keeper-client
+CLIENT_BUILD_DIR=./cmd/client
 VERSION=1.0.0
 BUILD_TIME=$(shell date +'%Y/%m/%d_%H:%M:%S')
+STAGE=DEV
 
 .PHONY: build run test clean
 
@@ -19,19 +22,33 @@ gen-proto:
 		$(PROTO_PATH)/*.proto
 
 # Генерация swagger
-swag-gen:
-	swag init -g cmd/server/main.go --parseDependency --parseInternal
+gen-swagger:
+	swag init \
+		-g $(SERVER_BUILD_DIR)/main.go \
+		--parseDependency \
+		--parseInternal \
+		--exclude pkg/client/rest
 #	swag init -g cmd/server/main.go
 
+gen-http-client:
+#	oapi-codegen -package client -generate client docs/swagger.json > pkg/client/rest/api_client.gen.go
+	swagger generate client -f ./docs/swagger.json -A goph-keeper -t pkg/client/rest
+
 # Сборка проекта с прокидыванием переменных
-build:
-	go build -ldflags "-X '$(MODULE_NAME)/config.Version=$(VERSION)' \
-	-X '$(MODULE_NAME)/config.BuildTime=$(BUILD_TIME)'" \
-	-o ./bin/$(BINARY_NAME) $(BUILD_DIR)/main.go
+build: gen-swagger
+	go build -ldflags "-X '$(MODULE_NAME)/internal/app/server/config.Version=$(VERSION)' \
+    -X '$(MODULE_NAME)/internal/app/server/config.Stage=$(STAGE)' \
+	-X '$(MODULE_NAME)/internal/app/server/config.BuildTime=$(BUILD_TIME)'" \
+	-o ./bin/$(SERVER_BINARY_NAME) $(SERVER_BUILD_DIR)/main.go
+
+	go build -ldflags "-X '$(MODULE_NAME)/internal/app/client/config.Version=$(VERSION)' \
+    -X '$(MODULE_NAME)/internal/app/client/config.Stage=$(STAGE)' \
+	-X '$(MODULE_NAME)/internal/app/client/config.BuildTime=$(BUILD_TIME)'" \
+	-o ./bin/$(CLIENT_BINARY_NAME) $(CLIENT_BUILD_DIR)/main.go
 
 # Запуск проекта (сначала соберет, потом запустит)
 run: build
-	./bin/$(BINARY_NAME)
+	./bin/$(SERVER_BINARY_NAME)
 
 # Запуск тестов
 test:
@@ -39,4 +56,4 @@ test:
 
 # Очистка бинарников
 clean:
-	rm -rf ./bin
+	rm -rf ./bin/*

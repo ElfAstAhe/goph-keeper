@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ElfAstAhe/goph-keeper/internal/ep/dto"
+	"github.com/ElfAstAhe/goph-keeper/api/rest/dto"
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 )

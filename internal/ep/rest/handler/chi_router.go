@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	_ "github.com/ElfAstAhe/goph-keeper/docs"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
@@ -50,8 +49,10 @@ func NewAppChiRouter(
 	// setup middleware
 	res.setupMiddleware(logger)
 
-	// mount
+	// mount debug
 	res.router.Mount("/debug", middleware.Profiler())
+	// mount swagger
+	res.router.Mount("/swagger/", swagh.WrapHandler)
 
 	// setup routes
 	res.setupRoutes()
@@ -79,7 +80,7 @@ func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout
-	cr.router.Use(middleware.Timeout(20 * time.Second))
+	//cr.router.Use(middleware.Timeout(20 * time.Second))
 }
 
 func (cr *AppChiRouter) setupRoutes() {
@@ -107,6 +108,4 @@ func (cr *AppChiRouter) setupRoutes() {
 			})
 		})
 	})
-
-	cr.router.Get("/swagger/*", swagh.WrapHandler)
 }
