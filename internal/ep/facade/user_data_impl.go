@@ -51,6 +51,20 @@ func (udf *UserDataFacadeImpl) GetByKey(ctx context.Context, dataKind, name stri
 	return mapper.UserDataToUserDataDto(userData)
 }
 
+func (udf *UserDataFacadeImpl) ListAll(ctx context.Context) ([]*dto.UserDataDto, error) {
+	userInfo, err := udf.authHelper.UserInfoFromContext(ctx)
+	if err != nil {
+		return nil, errs.NewAuthForbiddenError("user info from context", err)
+	}
+
+	userData, err := udf.userDataService.ListAll(ctx, userInfo.UserID())
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.UserDataShortListToUserDataDto(userData)
+}
+
 func (udf *UserDataFacadeImpl) Create(ctx context.Context, data *dto.UserDataDto) (*dto.UserDataDto, error) {
 	userInfo, err := udf.authHelper.UserInfoFromContext(ctx)
 	if err != nil {

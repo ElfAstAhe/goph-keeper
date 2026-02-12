@@ -86,3 +86,37 @@ func UserDataDtoToUserData(src *dto.UserDataDto) (*model.UserData, error) {
 
 	return res, nil
 }
+
+func UserDataShortToUserDataDto(src *model.UserDataShort) (*dto.UserDataDto, error) {
+	if src == nil {
+		return nil, apperrs.NewEpMappingError("UserDataShortToUserDataDto", "UserDataShort", "UserData", "nil source", nil)
+	}
+
+	res := dto.NewEmptyUserDataDto()
+
+	res.ID = src.ID
+	res.DataKind = src.Key.DataKind
+	res.Name = src.Key.Name
+	res.CreatedAt = src.CreatedAt
+	res.ModifiedAt = src.ModifiedAt
+
+	return res, nil
+}
+
+func UserDataShortListToUserDataDto(src []*model.UserDataShort) ([]*dto.UserDataDto, error) {
+	if len(src) == 0 {
+		return make([]*dto.UserDataDto, 0), nil
+	}
+
+	res := make([]*dto.UserDataDto, 0, len(src))
+	for _, udMdl := range src {
+		udDto, err := UserDataShortToUserDataDto(udMdl)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, udDto)
+	}
+
+	return res, nil
+}

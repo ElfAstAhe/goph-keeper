@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/ElfAstAhe/goph-keeper/docs"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
 	"github.com/ElfAstAhe/goph-keeper/internal/ep/facade"
 	appmware "github.com/ElfAstAhe/goph-keeper/internal/ep/rest/middleware"
@@ -11,6 +12,8 @@ import (
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/swaggo/files"
+	swagh "github.com/swaggo/http-swagger"
 )
 
 type AppChiRouter struct {
@@ -62,7 +65,7 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 
 func (cr *AppChiRouter) setupMiddleware(logger logger.Logger) {
 	// jwt auth extractor - extract user info from token
-	cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.jwtHTTPHelper, logger).Handle)
+	cr.router.Use(appmware.NewAuthExtractorMiddleware(cr.authHelper, cr.jwtHTTPHelper, logger).Handle)
 	// requestID
 	cr.router.Use(middleware.RequestID)
 	// realIP
@@ -100,7 +103,10 @@ func (cr *AppChiRouter) setupRoutes() {
 				r.Post("/", cr.postAPIUsersData)
 				r.Put("/{id}", cr.putAPIUsersData)
 				r.Delete("/{id}", cr.deleteAPIUsersData)
+				r.Get("/list", cr.getAPIUsersDataList)
 			})
 		})
 	})
+
+	cr.router.Get("/swagger/*", swagh.WrapHandler)
 }

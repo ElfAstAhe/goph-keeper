@@ -11,7 +11,7 @@ import (
 type AuthService interface {
 	// Authenticate проверяет login/pass
 	// и возвращает подписанный JWT токен.
-	Authenticate(ctx context.Context, username, password string) (*jwt.Token, error)
+	Authenticate(ctx context.Context, username, encryptedPassword string) (*jwt.Token, error)
 
 	// Authorize выдаёт набор ролей subject
 	Authorize(ctx context.Context, subject string) (utils.Roles, error)
