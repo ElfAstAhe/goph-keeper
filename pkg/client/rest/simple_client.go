@@ -108,7 +108,7 @@ func (c *GophKeeperSimpleClient) GetByKey(ctx context.Context, dataKind string, 
 
 func (c *GophKeeperSimpleClient) ListAll(ctx context.Context) ([]*dto.UserDataDto, error) {
 	var res []*dto.UserDataDto
-	err := c.doRequest(ctx, http.MethodGet, "/api/users/data/list", nil, res, true)
+	err := c.doRequest(ctx, http.MethodGet, "/api/users/data/list", nil, &res, true)
 	if err != nil {
 		return nil, NewClientError("ListAll", -1, "", err)
 	}

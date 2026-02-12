@@ -44,6 +44,10 @@ func (ch *CmdHandlerImpl) cmdSave(ctx context.Context, options *config.AppOption
 			ch.log.Warnf("user data not found, data kind [%s], name [%s]", options.DataKind, options.Name)
 
 			res = dto.NewEmptyUserDataDto()
+		} else if ok && clientErr.StatusCode == http.StatusGone {
+			ch.log.Warnf("user data already removed, please, change name, data kind [%s], name [%s]", options.DataKind, options.Name)
+
+			return nil
 		} else {
 			return errs.NewAppCommonError("Error getting data", err)
 		}

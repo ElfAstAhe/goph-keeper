@@ -109,9 +109,3 @@ func (ch *CmdHandlerImpl) beforeCmd(ctx context.Context, opts *config.AppOptions
 
 	return nil
 }
-
-func (ch *CmdHandlerImpl) cmdList(ctx context.Context, options *config.AppOptions) error {
-	// ToDo: implement
-
-	return errs.NewAppCommonError("not implemented", nil)
-}

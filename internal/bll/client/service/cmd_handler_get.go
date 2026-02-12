@@ -46,6 +46,11 @@ func (ch *CmdHandlerImpl) cmdGet(ctx context.Context, options *config.AppOptions
 
 			return nil
 		}
+		if ok && clientErr.StatusCode == http.StatusGone {
+			ch.log.Warnf("user data removed, data kind [%s], name [%s]", options.DataKind, options.Name)
+
+			return nil
+		}
 
 		return errs.NewAppCommonError("Error getting data", err)
 	}

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ElfAstAhe/goph-keeper/api/rest/dto"
 	"github.com/ElfAstAhe/goph-keeper/internal/app/client/config"
 	"github.com/ElfAstAhe/goph-keeper/pkg/client/rest"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
@@ -36,13 +35,17 @@ func (ch *CmdHandlerImpl) cmdDelete(ctx context.Context, options *config.AppOpti
 	if err != nil {
 		var clientErr *rest.ClientError
 		ok := errors.As(err, &clientErr)
-		if ok && clientErr.StatusCode == http.StatusNotFound {
+		if ok && (clientErr.StatusCode == http.StatusNotFound || clientErr.StatusCode == http.StatusGone) {
 			ch.log.Warnf("user data not found, data kind [%s], name [%s]", options.DataKind, options.Name)
 
-			res = dto.NewEmptyUserDataDto()
-		} else {
-			return errs.NewAppCommonError("Error getting data", err)
+			return nil
+		} else if ok && clientErr.StatusCode == http.StatusGone {
+			ch.log.Warnf("user data removed, data kind [%s], name [%s]", options.DataKind, options.Name)
+
+			return nil
 		}
+
+		return errs.NewAppCommonError("Error getting data", err)
 	}
 
 	err = ch.client.Delete(ctx, res.ID)
