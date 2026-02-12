@@ -1,27 +1,13 @@
 package db
 
 import (
-	"database/sql"
-	"io"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
 )
 
-type Kind string
-
+// Типы поддерживаемых БД
+// на данный момент только postgres
 const (
-	KindInMemory Kind = "InMemory"
-	KindPostgres Kind = "Postgres"
+	KindInMemory utils.DatabaseKind = "InMemory"
+	KindPostgres utils.DatabaseKind = "Postgres"
+	KindSQLite3  utils.DatabaseKind = "SQLite3"
 )
-
-type DB interface {
-	GetDB() *sql.DB
-	GetDBKind() string
-	GetDsn() string
-}
-
-func CloseDB(db DB) error {
-	if closer, ok := db.(io.Closer); ok {
-		return closer.Close()
-	}
-
-	return nil
-}

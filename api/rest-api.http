@@ -1,0 +1,75 @@
+### /auth/register
+POST http://localhost:8080/api/auth/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "test003",
+  "password": "test003",
+  "person": "test user 003",
+  "e_mail": "test@localhost.org"
+}
+
+### /auth/login
+POST http://localhost:8080/api/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "test001",
+  "password": "test001"
+}
+
+### /users/profile
+GET http://localhost:8080/api/users/profile
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+### /users/keys
+PUT http://localhost:8080/api/users/keys
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+### /users/data (create)
+POST http://localhost:8080/api/users/data
+Accept: application/json
+Content-Type: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+{
+  "name": "gmail",
+  "data_kind": "credential",
+  "text_data": "v.lohankin:super_password"
+}
+
+### /users/data/{id}
+GET http://localhost:8080/api/users/data/c41c880e-14a8-400d-af81-1b83c85ba5a1
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+### /users/data/{dataKind}/{name}
+GET http://localhost:8080/api/users/data/credential/gmail
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+### /users/data/list
+GET http://localhost:8080/api/users/data/list
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+### /users/data/{id}
+PUT http://localhost:8080/api/users/data/c41c880e-14a8-400d-af81-1b83c85ba5a1
+Accept: application/json
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+{
+  "name": "gmail-2",
+  "data_kind": "credential",
+  "text_data": "v.lohankin:super_password2"
+}
+
+#### /users/data/{id}
+DELETE http://localhost:8080/api/users/data/c41c880e-14a8-400d-af81-1b83c85ba5a1
+Cookie: Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb3BoLWtlZXBlciIsInN1YiI6InRlc3QwMDEiLCJleHAiOjE3NzA3MTQ5NDEsImlhdCI6MTc3MDcxMzE0MSwianRpIjoidW5kZWYtZWMxOGQ1MTctNjY5Zi00ZDk4LThlMjEtMTk4NmQ5NDA1NzM5IiwidXNlcl9pZCI6ImU0Mzc3ZDc5LTM1OWEtNDZiNi04YWE1LTIzYjhhNjA3MGMyYyIsInJvbGVzIjpbInVzZXIiXX0.kMlKu-G6lMjcvhw49_OBiQ7oTuMy5UUedpwSx_ssUw0; SameSite=Strict
+
+###

@@ -3,24 +3,34 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/ElfAstAhe/goph-keeper/internal/app/server/config"
+	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgresDB struct {
-	db   *sql.DB
-	kind Kind
-	dsn  string
+	db     *sql.DB
+	kind   utils.DatabaseKind
+	dsn    string
+	helper utils.DBHelper
 }
 
 // NewPostgresDB - конструктор соединения с БД postgres
-func NewPostgresDB(dsn string) (*PostgresDB, error) {
-	pg, err := sql.Open("pgx", dsn)
+func NewPostgresDB(dbConf *config.DatabaseConfig, helper utils.DBHelper) (*PostgresDB, error) {
+	//err := utils.DBValidateDSN(dbConf.DSN)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	pg, err := sql.Open("pgx", dbConf.DSN)
 	if err != nil {
 		return nil, err
 	}
 
-	pg.SetMaxOpenConns(20)
-	pg.SetMaxIdleConns(5)
-	pg.SetConnMaxIdleTime(60 * time.Second)
+	pg.SetMaxOpenConns(dbConf.MaxOpenConnections)
+	pg.SetMaxIdleConns(dbConf.MaxIdleConnections)
+	pg.SetConnMaxIdleTime(time.Duration(dbConf.MaxIdleConnectionLifetime) * time.Second)
 
 	err = pg.Ping()
 	if err != nil {
@@ -28,9 +38,10 @@ func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	}
 
 	return &PostgresDB{
-		db:   pg,
-		kind: KindPostgres,
-		dsn:  dsn,
+		db:     pg,
+		kind:   KindPostgres,
+		dsn:    dbConf.DSN,
+		helper: helper,
 	}, nil
 }
 
@@ -42,14 +53,18 @@ func (db *PostgresDB) Close() error {
 
 // db.DB =========================
 
-func (db *PostgresDB) Kind() Kind {
+func (db *PostgresDB) GetDBKind() utils.DatabaseKind {
 	return db.kind
 }
 
-func (db *PostgresDB) Dsn() string {
+func (db *PostgresDB) GetDsn() string {
 	return db.dsn
 }
 
 func (db *PostgresDB) GetDB() *sql.DB {
 	return db.db
+}
+
+func (db *PostgresDB) GetHelper() utils.DBHelper {
+	return db.helper
 }
