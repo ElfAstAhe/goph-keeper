@@ -48,7 +48,7 @@ build: gen-swagger
 
 # Запуск проекта (сначала соберет, потом запустит)
 run: build
-	./bin/$(SERVER_BINARY_NAME)
+	./bin/$(SERVER_BINARY_NAME) -http-address "localhost:8080" -database-dsn "postgres://elf:melkore@localhost:5432/test?sslmode=disable&search_path=gophkeeper" -jwt-secret-key "jwt-key" -cipher-key "12345"
 
 # Запуск тестов
 test:
