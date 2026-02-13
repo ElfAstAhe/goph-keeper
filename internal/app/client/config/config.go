@@ -211,7 +211,7 @@ func (as *AppSettings) buildDefaultConfigPath() (string, error) {
 	exeDir := filepath.Dir(exePath)
 
 	// 4. Собираем путь (например, /home/user/goph-keeper/config/config.yaml)
-	configPath := filepath.Join(exeDir, "goph-keeper-client-conf.json")
+	configPath := filepath.Join(exeDir, "test002-goph-keeper-client-conf.json")
 
 	return configPath, nil
 }

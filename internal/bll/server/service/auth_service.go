@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AuthService - сервис аутентификации и авторизации

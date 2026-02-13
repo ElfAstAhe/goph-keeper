@@ -6,7 +6,7 @@ import (
 	"os"
 
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v11"
 )
 
 type HTTPConfig struct {

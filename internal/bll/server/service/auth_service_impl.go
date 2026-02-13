@@ -10,7 +10,7 @@ import (
 	apperrs "github.com/ElfAstAhe/goph-keeper/internal/err"
 	errs "github.com/ElfAstAhe/goph-keeper/pkg/error"
 	"github.com/ElfAstAhe/goph-keeper/pkg/utils"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AuthServiceImpl - реализация сервиса аутентификации и авторизации
